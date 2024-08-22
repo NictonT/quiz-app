@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Application</title>
+    <link rel="stylesheet" href="execute.css">
+</head>
+<body>
+    <div id="quizPage" class="slide active">
+        <div class="progress-container">
+            <div class="file-name" id="fileNameDisplay"></div>
+            <div class="progress-bar">
+                <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
+            </div>
+            <div class="question-count" id="questionCount"></div>
+        </div>
+
+        <div class="question-card">
+            <div id="questionArea">
+                <h2 id="questionText"></h2>
+            </div>
+            <div id="answersContainer"></div>
+        </div>
+
+        <div class="button-container">
+            <button class="button primary" id="submitButton" onclick="submitAnswer()">Submit</button>
+            <button class="button secondary" id="skipButton" onclick="skipQuestion()">Skip</button>
+            <button class="button secondary help-button" onclick="showAnswer()">?</button>
+        </div>
+    </div>
+
+    <div id="resultPage" class="slide hidden">
+        <div class="result-content">
+            <h2>Quiz Results</h2>
+            <div id="scoreText"></div>
+            <div id="scoreGraphics">
+                <div class="score-section">
+                    <div class="score-label">Correct Answers</div>
+                    <div id="correctPercentage" class="circle-chart correct" onclick="toggleCorrectList()"></div>
+                </div>
+                <div class="score-section">
+                    <div class="score-label">Wrong/Skipped Answers</div>
+                    <div id="wrongPercentage" class="circle-chart wrong" onclick="toggleWrongList()"></div>
+                </div>
+            </div>
+            <div id="correctList" class="answer-list hidden"></div>
+            <div id="wrongList" class="answer-list hidden"></div>
+        </div>
+        <div class="button-container">
+            <button class="button primary" onclick="restartQuiz()">Restart Quiz</button>
+            <button class="button secondary" onclick="redoWrongAnswers()">Redo Wrong</button>
+            <button class="button secondary" onclick="goToHomePage()">Home Page</button>
+        </div>
+    </div>
+
+    <script src="execute.js"></script>
+</body>
+</html>

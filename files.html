@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Manager</title>
+    <link rel="stylesheet" href="files.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body class="night-mode">
+    <div class="container">
+        <div class="header">
+            <h1 id="pageTitle">Files</h1>
+            <div class="toggle-container">
+                <input type="checkbox" id="nightModeToggle" class="toggle">
+                <label for="nightModeToggle" class="toggle-label">Night Mode</label>
+            </div>
+        </div>
+        <div class="content">
+            <div class="control-panel">
+                <button class="button secondary list-button" onclick="toggleFileList()">List ↑</button>
+                <button class="button secondary" onclick="showAddFileModal()">+</button>
+                <button class="button secondary" onclick="goBack()">Back</button>
+            </div>
+            <div id="filesContainer"></div>
+        </div>
+    </div>
+
+    <div id="addFileModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeAddFileModal()">×</span>
+            <h2>Add New File or Folder</h2>
+            <label for="fileType">Type:</label>
+            <select id="fileType">
+                <option value="JSON">JSON</option>
+                <option value="Folder">Folder</option>
+            </select>
+            <input type="text" id="fileNameInput" placeholder="Enter name">
+            <button class="button primary" onclick="addNewFile()">Add</button>
+        </div>
+    </div>
+
+    <div id="renameFileModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeRenameFileModal()">×</span>
+            <h2>Rename File or Folder</h2>
+            <input type="text" id="newFileNameInput" placeholder="Enter new name">
+            <button class="button primary" onclick="renameFile()">Rename</button>
+        </div>
+    </div>
+
+    <script src="files.js"></script>
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+</body>
+</html>

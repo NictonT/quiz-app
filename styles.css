@@ -1,0 +1,215 @@
+:root {
+    --primary-color: #00BCD4;  /* Cyan */
+    --secondary-color: #FF9800; /* Orange */
+    --background-color: #f0f0f0;  /* Light Gray */
+    --text-color: #212121; /* Dark Gray */
+    --box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    --slide-transition: transform 0.5s ease-in-out;
+}
+
+body.night-mode {
+    --primary-color: #0097A7; /* Darker Cyan */
+    --secondary-color: #FFB74D; /* Darker Orange */
+    --background-color: #1c1c1c; /* Dark Background */
+    --text-color: #E0E0E0; /* Light Text */
+    --box-shadow: 0px 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2 {
+    font-weight: 600;
+    margin: 0;
+}
+
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 1em;
+}
+
+h2 {
+    font-size: 1.5em;
+}
+
+.hidden {
+    display: none;
+}
+
+.slide {
+    background-color: #fff; /* White slide background */
+    border-radius: 15px;
+    padding: 40px;
+    text-align: center;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: var(--box-shadow);
+    color: var(--text-color); /* Text color on slides */
+    transition: var(--slide-transition);
+    transform: translateX(0);
+    position: relative;
+    overflow: hidden; /* To hide overflowing graphics */
+}
+
+body.night-mode .slide {
+    background-color: #2c2c2c; /* Darker background for slides */
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+}
+
+.toggle {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 40px;
+    height: 20px;
+    background: #ccc;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.3s ease;
+}
+
+.toggle:checked {
+    background: var(--primary-color);
+}
+
+.toggle:before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.toggle:checked:before {
+    transform: translateX(20px);
+}
+
+.toggle-label {
+    margin-left: 10px;
+    font-size: 14px;
+}
+
+textarea {
+    width: calc(100% - 22px);
+    padding: 15px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    resize: vertical;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+body.night-mode textarea {
+    background-color: rgba(50, 50, 50, 0.8); /* Darker background for textarea */
+    color: var(--text-color);
+}
+
+.button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: var(--box-shadow);
+    font-weight: 500;
+}
+
+.button.secondary {
+    background-color: var(--secondary-color);
+}
+
+.button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.night-mode .button {
+    box-shadow: var(--box-shadow);
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.slide::before { 
+    content: "";
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background-color: var(--secondary-color);
+    opacity: 0.15;
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.slide::after {
+    content: "";
+    position: absolute;
+    bottom: -50px;
+    right: -50px;
+    width: 150px;
+    height: 150px;
+    background-color: var(--primary-color);
+    opacity: 0.15; 
+    transform: rotate(45deg);
+    z-index: -1; 
+}
+
+body.night-mode .slide::before {
+    background-color: var(--secondary-color);
+}
+
+body.night-mode .slide::after {
+    background-color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .slide {
+        max-width: 90%;
+        width: 90%;
+    }
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Folder Manager</title>
+    <link rel="stylesheet" href="folder.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="pageTitle">Folder Manager</h1>
+            <div class="toggle-container">
+                <input type="checkbox" id="nightModeToggle" class="toggle">
+                <label for="nightModeToggle" class="toggle-label">Night Mode</label>
+            </div>
+        </div>
+        <div class="content">
+            <div id="folderView">
+                <button id="addFileButton" class="button primary">Add File</button>
+                <button id="addFolderButton" class="button secondary">Add Folder</button>
+                <div id="fileList"></div>
+            </div>
+            <div id="fileEditView" style="display: none;">
+                <textarea id="fileContent" rows="20" placeholder="JSON content goes here..."></textarea>
+                <div class="button-container">
+                    <button id="saveButton" class="button primary">Save</button>
+                    <button id="executeButton" class="button secondary">Execute</button>
+                    <button id="backButton" class="button secondary">Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="folder.js"></script>
+</body>
+</html>

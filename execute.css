@@ -1,0 +1,495 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+:root {
+    --primary-color: #00BCD4;  /* Cyan */
+    --secondary-color: #FF9800; /* Orange */
+    --background-color: #f0f0f0;  /* Light Gray */
+    --text-color: #212121; /* Dark Gray */
+    --box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    --slide-transition: transform 0.5s ease-in-out;
+}
+
+/* Night Mode Styles */
+body.night-mode {
+    --primary-color: #0097A7; /* Darker Cyan */
+    --secondary-color: #FFB74D; /* Darker Orange */
+    --background-color: #1c1c1c; /* Dark Background */
+    --text-color: #E0E0E0; /* Light Text */
+    --box-shadow: 0px 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Typography */
+h1, h2 {
+    font-weight: 600;
+    margin: 0;
+}
+
+h1 {
+    font-size: 2.5em;
+    margin-bottom: 1em;
+}
+
+h2 {
+    font-size: 1.5em;
+}
+
+/* Container & Slide Styles */
+.container {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.hidden {
+    display: none;
+}
+
+.slide {
+    background-color: #fff; /* White slide background */
+    border-radius: 15px;
+    padding: 40px;
+    text-align: center;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: var(--box-shadow);
+    color: var(--text-color); /* Text color on slides */
+    transition: var(--slide-transition);
+    transform: translateX(0);
+    position: relative;
+    overflow: hidden; /* To hide overflowing graphics */
+}
+
+body.night-mode .slide {
+    background-color: #2c2c2c; /* Darker background for slides */
+}
+
+.slide.hidden {
+    transform: translateX(-100%);
+}
+
+.slide.active {
+    transform: translateX(0);
+}
+
+/* Header & Toggle Styles */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.toggle-container {
+    display: flex;
+    align-items: center;
+}
+
+.toggle {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 40px;
+    height: 20px;
+    background: #ccc;
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    outline: none;
+    transition: background 0.3s ease;
+}
+
+.toggle:checked {
+    background: var(--primary-color);
+}
+
+.toggle:before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.toggle:checked:before {
+    transform: translateX(20px);
+}
+
+.toggle-label {
+    margin-left: 10px;
+    font-size: 14px;
+}
+
+/* Button Styles */
+.button {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 14px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: var(--box-shadow);
+    font-weight: 500;
+}
+
+.button.secondary {
+    background-color: var(--secondary-color);
+}
+
+.button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+body.night-mode .button {
+    box-shadow: var(--box-shadow);
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
+/* Content Styles */
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+/* Question Area Styles */
+#questionArea {
+    margin-bottom: 20px;
+    position: relative; /* To position the help button */
+}
+
+/* Answers Container Styles */
+#answersContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Answer Styles */
+.answer {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+body.night-mode .answer {
+    background-color: rgba(50, 50, 50, 0.9);
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+.answer:hover {
+    background-color: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+}
+
+body.night-mode .answer:hover {
+    background-color: rgba(70, 70, 70, 0.9);
+}
+
+.answer.selected {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+body.night-mode .answer.selected {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.answer.correct {
+    background-color: rgba(76, 175, 80, 0.8);
+    color: white;
+}
+
+.answer.wrong {
+    background-color: rgba(244, 67, 54, 0.8);
+    color: white;
+}
+
+/* Progress Container Styles */
+.progress-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+body.night-mode .progress-container {
+    background-color: rgba(50, 50, 50, 0.8);
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: rgba(200, 200, 200, 0.8);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: var(--secondary-color);
+    border-radius: 5px;
+    width: 0%;
+    transition: width 0.5s ease-out;
+}
+
+.question-count {
+    font-size: 14px;
+    color: var(--text-color);
+}
+
+.question-card {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+body.night-mode .question-card {
+    background-color: rgba(50, 50, 50, 0.9);
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+/* Score Section, Icons, and Labels Styles */
+.score-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px;
+}
+
+.score-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.score-icon.correct {
+    color: #4CAF50;
+}
+
+.score-icon.wrong {
+    color: #F44336;
+}
+
+.score-label {
+    font-size: 16px;
+    color: var(--text-color);
+}
+
+/* Circle Chart Styles */
+.circle-chart {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: #eee;
+    position: relative;
+    margin-bottom: 15px;
+    cursor: pointer;
+}
+
+body.night-mode .circle-chart {
+    background-color: #2c2c2c;
+}
+
+.circle-chart.correct {
+    background-image: conic-gradient(#4CAF50 var(--percentage), #eee 0);
+}
+
+body.night-mode .circle-chart.correct {
+    background-image: conic-gradient(#4CAF50 var(--percentage), #2c2c2c 0);
+}
+
+.circle-chart.wrong {
+    background-image: conic-gradient(#F44336 var(--percentage), #eee 0);
+}
+
+body.night-mode .circle-chart.wrong {
+    background-image: conic-gradient(#F44336 var(--percentage), #2c2c2c 0);
+}
+
+.circle-chart::before {
+    content: attr(data-count);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
+/* Answer List Styles */
+.answer-list {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    margin-top: 15px;
+}
+
+body.night-mode .answer-list {
+    background-color: rgba(50, 50, 50, 0.8);
+}
+
+.answer-list li {
+    margin-bottom: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+body.night-mode .answer-list li {
+    background-color: rgba(50, 50, 50, 0.8);
+    color: var(--text-color);
+}
+
+.answer-list li:hover {
+    background-color: rgba(200, 200, 200, 0.8);
+}
+
+body.night-mode .answer-list li:hover {
+    background-color: rgba(70, 70, 70, 0.8);
+}
+
+/* CSS Graphics  */
+.slide::before { 
+    content: "";
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background-color: var(--secondary-color);
+    opacity: 0.15;
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.slide::after {
+    content: "";
+    position: absolute;
+    bottom: -50px;
+    right: -50px;
+    width: 150px;
+    height: 150px;
+    background-color: var(--primary-color);
+    opacity: 0.15; 
+    transform: rotate(45deg);
+    z-index: -1; 
+}
+
+body.night-mode .slide::before {
+    background-color: var(--secondary-color);
+}
+
+body.night-mode .slide::after {
+    background-color: var(--primary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .slide {
+        max-width: 90%;
+        width: 90%;
+    }
+}
+
+/* New Styles for Quiz Elements */
+.help-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: var(--secondary-color);
+    color: white;
+    padding: 8px 12px; 
+    border: none;
+    border-radius: 5px; 
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease; 
+    box-shadow: var(--box-shadow);
+}
+
+.help-button:hover {
+    transform: translateY(-2px); 
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.18);
+}
+
+body.night-mode .help-button {
+    box-shadow: var(--box-shadow);
+}
+
+.file-name {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: var(--secondary-color); 
+    text-align: left;
+}
+
+body.night-mode .file-name {
+    color: var(--secondary-color);
+}
+
+/* Indicator Styles */
+.indicator {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.indicator.correct {
+    background-color: #4CAF50; /* Green */
+}
+
+.indicator.wrong {
+    background-color: #F44336; /* Red */
+}
+
+.indicator.skipped {
+    background-color: #FFC107; /* Yellow */
+}

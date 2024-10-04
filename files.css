@@ -4,6 +4,7 @@
     --background-color: #f0f0f0;  /* Light Gray */
     --text-color: #212121; /* Dark Gray */
     --box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+    --slide-transition: transform 0.5s ease-in-out;
 }
 
 /* Night Mode Styles */
@@ -43,20 +44,40 @@ h2 {
     font-size: 1.5em;
 }
 
-/* Container Styles */
+/* Container & Slide Styles */
 .container {
-    background-color: #fff;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.hidden {
+    display: none;
+}
+
+.slide {
+    background-color: #fff; /* White slide background */
     border-radius: 15px;
     padding: 40px;
     text-align: center;
     max-width: 600px;
     width: 90%;
     box-shadow: var(--box-shadow);
-    color: var(--text-color);
+    color: var(--text-color); /* Text color on slides */
+    transition: var(--slide-transition);
+    transform: translateX(0);
+    position: relative;
+    overflow: hidden; /* To hide overflowing graphics */
 }
 
-body.night-mode .container {
-    background-color: #2c2c2c;
+body.night-mode .slide {
+    background-color: #2c2c2c; /* Darker background for slides */
+}
+
+.slide.hidden {
+    transform: translateX(-100%);
+}
+
+.slide.active {
+    transform: translateX(0);
 }
 
 /* Header & Toggle Styles */
@@ -110,6 +131,25 @@ body.night-mode .container {
     font-size: 14px;
 }
 
+/* Textarea Styles */
+textarea {
+    width: calc(100% - 22px);
+    padding: 15px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    resize: vertical;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+body.night-mode textarea {
+    background-color: rgba(50, 50, 50, 0.8); /* Darker background for textarea */
+    color: var(--text-color);
+}
+
 /* Button Styles */
 .button {
     background-color: var(--primary-color);
@@ -122,7 +162,6 @@ body.night-mode .container {
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     box-shadow: var(--box-shadow);
     font-weight: 500;
-    margin: 10px 0;
 }
 
 .button.secondary {
@@ -138,19 +177,328 @@ body.night-mode .button {
     box-shadow: var(--box-shadow);
 }
 
+.button-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 20px;
+}
+
 /* Content Styles */
 .content {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    height: 100%;
 }
 
-/* File List Styles */
-.file-list {
-    margin: 20px 0;
+/* Question Area Styles */
+#questionArea {
+    margin-bottom: 20px;
+    position: relative; /* To position the help button */
 }
 
+/* Answers Container Styles */
+#answersContainer {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Answer Styles */
+.answer {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: flex;
+    align-items: center;
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+body.night-mode .answer {
+    background-color: rgba(50, 50, 50, 0.9); /* Darker background for answers */
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+.answer:hover {
+    background-color: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+}
+
+body.night-mode .answer:hover {
+    background-color: rgba(70, 70, 70, 0.9); /* Slightly lighter on hover */
+}
+
+.answer.selected {
+    background-color: rgba(200, 200, 200, 0.9);
+}
+
+body.night-mode .answer.selected {
+    background-color: rgba(70, 70, 70, 0.9);
+}
+
+.answer.correct {
+    background-color: rgba(76, 175, 80, 0.8);
+    color: white;
+}
+
+.answer.wrong {
+    background-color: rgba(244, 67, 54, 0.8);
+    color: white;
+}
+
+/* Progress Container Styles */
+.progress-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px;
+    border-radius: 5px;
+}
+
+body.night-mode .progress-container {
+    background-color: rgba(50, 50, 50, 0.8); /* Darker background for progress container */
+}
+
+.progress-bar {
+    width: 100%;
+    height: 10px;
+    background-color: rgba(200, 200, 200, 0.8);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar-fill {
+    height: 100%;
+    background-color: var(--secondary-color);
+    border-radius: 5px;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.question-count {
+    font-size: 14px;
+    color: var (--text-color);
+}
+
+.question-card {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+body.night-mode .question-card {
+    background-color: rgba(50, 50, 50, 0.9); /* Darker background for question card */
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+/* Score Section, Icons, and Labels Styles */
+.score-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 10px;
+}
+
+.score-icon {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.score-icon.correct {
+    color: #4CAF50;
+}
+
+.score-icon.wrong {
+    color: #F44336;
+}
+
+.score-label {
+    font-size: 16px;
+    color: var(--text-color);
+}
+
+/* Circle Chart Styles */
+.circle-chart {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: rgba(200, 200, 200, 0.8);
+    position: relative;
+    margin-bottom: 15px;
+}
+
+body.night-mode .circle-chart {
+    background-color: rgba(70, 70, 70, 0.8); /* Darker background for circle chart */
+}
+
+.circle-chart.correct {
+    background-image: conic-gradient(#4CAF50 var(--percentage), #eee 0);
+}
+
+body.night-mode .circle-chart.correct {
+    background-image: conic-gradient(#4CAF50 var(--percentage), #2c2c2c 0); /* Dark background for chart */
+}
+
+.circle-chart.wrong {
+    background-image: conic-gradient(#F44336 var(--percentage), #eee 0);
+}
+
+body.night-mode .circle-chart.wrong {
+    background-image: conic-gradient(#F44336 var(--percentage), #2c2c2c 0); /* Dark background for chart */
+}
+
+.circle-chart::before {
+    content: attr(data-percentage);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: var(--text-color);
+}
+
+/* Answer List Styles */
+.answer-list {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    margin-top: 15px;
+}
+
+body.night-mode .answer-list {
+    background-color: rgba(50, 50, 50, 0.8); /* Darker background for answer list */
+}
+
+.answer-list li {
+    margin-bottom: 5px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
+}
+
+body.night-mode .answer-list li {
+    background-color: rgba(50, 50, 50, 0.8); /* Darker background for list items */
+    color: var(--text-color);
+}
+
+/* CSS Graphics  */
+.slide::before { 
+    content: "";
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background-color: var(--secondary-color);
+    opacity: 0.15;
+    border-radius: 50%;
+    z-index: -1;
+}
+
+.slide::after {
+    content: "";
+    position: absolute;
+    bottom: -50px;
+    right: -50px;
+    width: 150px;
+    height: 150px;
+    background-color: var(--primary-color);
+    opacity: 0.15; 
+    transform: rotate(45deg);
+    z-index: -1; 
+}
+
+body.night-mode .slide::before {
+    background-color: var(--secondary-color);
+}
+
+body.night-mode .slide::after {
+    background-color: var(--primary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .slide {
+        max-width: 90%;
+        width: 90%;
+    }
+}
+
+/* New Styles for Quiz Elements */
+.help-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background-color: var(--secondary-color); /* Match secondary color */
+    color: white;
+    padding: 8px 12px; 
+    border: none;
+    border-radius: 5px; 
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease; 
+    box-shadow: var(--box-shadow);
+}
+
+.help-button:hover {
+    transform: translateY(-2px); 
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.18);
+}
+
+body.night-mode .help-button {
+    box-shadow: var(--box-shadow);
+}
+
+.file-name {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: var(--secondary-color); 
+    text-align: left;
+}
+
+body.night-mode .file-name {
+    color: var(--secondary-color);
+}
+
+/* ---------------- Styles for Files Page ---------------- */
+#fileContentContainer {
+    height: 70vh; 
+    overflow-y: auto; 
+}
+
+#fileContent { 
+    width: calc(100% - 22px);
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    resize: vertical;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+body.night-mode #fileContent {
+    background-color: rgba(50, 50, 50, 0.8); /* Darker background for file content */
+    color: var(--text-color);
+}
+
+/* File Items */
 .file-item {
     display: flex;
     justify-content: space-between;
@@ -160,10 +508,9 @@ body.night-mode .button {
     border-radius: 8px;
     padding: 15px 20px;
     margin-bottom: 10px;
-    cursor: pointer;
+    color: var(--text-color); 
+    box-shadow: var(--box-shadow); 
     transition: background-color 0.3s ease, transform 0.2s ease;
-    color: var(--text-color);
-    box-shadow: var(--box-shadow);
 }
 
 body.night-mode .file-item {
@@ -266,13 +613,4 @@ body.night-mode .close {
     border-radius: 5px;
     background-color: white;
     color: var(--text-color); 
-    box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-body.night-mode #fileType, 
-body.night-mode #fileNameInput, 
-body.night-mode #newFileNameInput {
-    background-color: rgba(50, 50, 50, 0.9); /* Darker background for inputs */
-    color: var(--text-color);
-    box-shadow: inset 0px 1px 3px rgba(255, 255, 255, 0.1);
-}
+    box-shadow: inset 0px 1px 3px rgba(0

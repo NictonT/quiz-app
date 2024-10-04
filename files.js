@@ -5,6 +5,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileNameInput = document.getElementById('fileNameInput');
     const fileType = document.getElementById('fileType');
     const newFileNameInput = document.getElementById('newFileNameInput');
+    const nightModeToggleFiles = document.getElementById('nightModeToggleFiles');
+    const nightModeToggleEdit = document.getElementById('nightModeToggleEdit');
 
     let files = JSON.parse(localStorage.getItem('files')) || [];
     let currentFileIndex = -1;
@@ -15,15 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
         filesContainer.innerHTML = '';
         const currentFolder = getCurrentFolder();
         const sortedFiles = currentFolder.slice().sort((a, b) => {
-            if (ascending) {
-                return a.name.localeCompare(b.name);
-            } else {
-                return b.name.localeCompare(a.name);
-            }
+            return ascending ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
         });
         sortedFiles.forEach((file, index) => {
             const fileElement = document.createElement('div');
-            fileElement.classList.add('file-item', 'answer');
+            fileElement.classList.add('file-item');
             const fileTypeEmoji = file.type === 'JSON' ? '📄' : '📁';
             fileElement.innerHTML = `
                 <div>
@@ -57,23 +55,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updatePageTitle() {
         const titleElement = document.querySelector('#pageTitle');
-        if (currentFolderPath.length > 0) {
-            titleElement.innerHTML = `Files - ${currentFolderPath.join(' / ')}`;
-        } else {
-            titleElement.innerHTML = 'Files';
-        }
+        titleElement.innerHTML = currentFolderPath.length > 0 ? `Files - ${currentFolderPath.join(' / ')}` : 'Files';
     }
 
-    window.showAddFileModal = function () {
+    function showAddFileModal() {
         addFileModal.style.display = 'flex';
-    };
+    }
 
-    window.closeAddFileModal = function () {
+    function closeAddFileModal() {
         addFileModal.style.display = 'none';
-    };
+    }
 
-    window.addNewFile = function () {
-        const fileName = fileNameInput.value;
+    function addNewFile() {
+        const fileName = fileNameInput.value.trim();
         if (fileName) {
             const currentFolder = getCurrentFolder();
             currentFolder.push({ name: fileName, type: fileType.value, content: fileType.value === 'JSON' ? '' : [] });
@@ -84,37 +78,37 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             alert('File name cannot be empty.');
         }
-    };
+    }
 
-    window.editFile = function (index) {
+    function editFile(index) {
         const currentFolder = getCurrentFolder();
         const file = currentFolder[index];
         if (file.type === 'JSON') {
             currentFileIndex = index;
-            localStorage.setItem('currentFile', JSON.stringify([file.content]));
-            localStorage.setItem('currentFilePath', JSON.stringify(currentFolderPath));
-            window.location.href = 'folder.html';
+            const editPage = document.getElementById('editPage');
+            const filesPage = document.getElementById('filesPage');
+            const currentEditFileName = document.getElementById('currentEditFileName');
+            editPage.classList.remove('hidden');
+            filesPage.classList.add('hidden');
+            currentEditFileName.textContent = file.name;
+            document.getElementById('fileContent').value = file.content;
         }
-    };
+    }
 
-    window.executeFile = function (index) {
+    function executeFile(index) {
         const currentFolder = getCurrentFolder();
         const file = currentFolder[index];
         if (file.type === 'JSON') {
-            localStorage.setItem('currentFile', JSON.stringify([file.content]));
-            localStorage.setItem('currentFilePath', JSON.stringify(currentFolderPath));
-            window.location.href = 'folder.html';
+            alert(`Executing the following content:\n${file.content}`);
         } else {
             const contentToExecute = executeAllJsonInFolder(file);
             if (contentToExecute.length > 0) {
-                localStorage.setItem('currentFile', JSON.stringify(contentToExecute));
-                localStorage.setItem('currentFilePath', JSON.stringify(currentFolderPath));
-                window.location.href = 'folder.html';
+                alert(`Executing the following content:\n${contentToExecute.join('\n')}`);
             } else {
                 alert('No JSON content found to execute.');
             }
         }
-    };
+    }
 
     function executeAllJsonInFolder(folder) {
         let jsonContents = [];
@@ -128,16 +122,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return jsonContents;
     }
 
-    window.openFolder = function (index) {
+    function openFolder(index) {
         const currentFolder = getCurrentFolder();
         const file = currentFolder[index];
         if (file.type === 'Folder') {
             currentFolderPath.push(file.name);
             displayFiles();
         }
-    };
+    }
 
-    window.deleteFile = function (index) {
+    function deleteFile(index) {
         const currentFolder = getCurrentFolder();
         const file = currentFolder[index];
         if (confirm(`Are you sure you want to delete "${file.name}"?`)) {
@@ -145,20 +139,20 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('files', JSON.stringify(files));
             displayFiles();
         }
-    };
+    }
 
-    window.showRenameFileModal = function (index) {
+    function showRenameFileModal(index) {
         currentFileIndex = index;
         const currentFolder = getCurrentFolder();
         newFileNameInput.value = currentFolder[index].name;
         renameFileModal.style.display = 'flex';
-    };
+    }
 
-    window.closeRenameFileModal = function () {
+    function closeRenameFileModal() {
         renameFileModal.style.display = 'none';
-    };
+    }
 
-    window.renameFile = function () {
+    function renameFile() {
         const newName = newFileNameInput.value.trim();
         if (newName) {
             const currentFolder = getCurrentFolder();
@@ -170,30 +164,52 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             alert('File name cannot be empty.');
         }
-    };
+    }
 
-    window.toggleFileList = function () {
+    function toggleFileList() {
         ascending = !ascending;
         document.querySelector('.list-button').innerText = `List ${ascending ? '↑' : '↓'}`;
         displayFiles();
-    };
+    }
 
-    window.goBack = function () {
+    function goBack() {
         if (currentFolderPath.length > 0) {
             currentFolderPath.pop();
             displayFiles();
+        } else {
+            const editPage = document.getElementById('editPage');
+            const filesPage = document.getElementById('filesPage');
+            editPage.classList.add('hidden');
+            filesPage.classList.remove('hidden');
         }
-    };
+    }
 
-    const nightModeToggle = document.getElementById('nightModeToggle');
+    function toggleNightMode(event) {
+        document.body.classList.toggle('night-mode', event.target.checked);
+        localStorage.setItem('nightMode', event.target.checked);
+    }
+
     if (localStorage.getItem('nightMode') === 'true') {
         document.body.classList.add('night-mode');
-        nightModeToggle.checked = true;
+        nightModeToggleFiles.checked = true;
+        nightModeToggleEdit.checked = true;
     }
-    nightModeToggle.addEventListener('change', function() {
-        document.body.classList.toggle('night-mode', this.checked);
-        localStorage.setItem('nightMode', this.checked);
-    });
 
-    displayFiles();  // Call displayFiles immediately when page loads
+    nightModeToggleFiles.addEventListener('change', toggleNightMode);
+    nightModeToggleEdit.addEventListener('change', toggleNightMode);
+
+    displayFiles();
+
+    window.showAddFileModal = showAddFileModal;
+    window.closeAddFileModal = closeAddFileModal;
+    window.addNewFile = addNewFile;
+    window.editFile = editFile;
+    window.executeFile = executeFile;
+    window.openFolder = openFolder;
+    window.deleteFile = deleteFile;
+    window.showRenameFileModal = showRenameFileModal;
+    window.closeRenameFileModal = closeRenameFileModal;
+    window.renameFile = renameFile;
+    window.toggleFileList = toggleFileList;
+    window.goBack = goBack;
 });

@@ -1,50 +1,70 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const filesContainer = document.getElementById('filesContainer');
-    const addFileModal = document.getElementById('addFileModal');
-    const renameFileModal = document.getElementById('renameFileModal');
-    const fileNameInput = document.getElementById('fileNameInput');
-    const fileType = document.getElementById('fileType');
-    const newFileNameInput = document.getElementById('newFileNameInput');
-    const nightModeToggleFiles = document.getElementById('nightModeToggleFiles');
-    const nightModeToggleEdit = document.getElementById('nightModeToggleEdit');
+class FileManager {
+    constructor() {
+        this.files = JSON.parse(localStorage.getItem('files')) || [];
+        this.currentFolderPath = [];
+        this.ascending = true;
+        this.filesContainer = document.getElementById('filesContainer');
+        this.fileNameInput = document.getElementById('fileNameInput');
+        this.fileType = document.getElementById('fileType');
+        this.newFileNameInput = document.getElementById('newFileNameInput');
+        this.addFileModal = document.getElementById('addFileModal');
+        this.renameFileModal = document.getElementById('renameFileModal');
+        this.nightModeToggle = document.getElementById('nightModeToggleFiles');
+        this.currentFile = null;
+        if (this.nightModeToggle) {
+            this.nightModeToggle.addEventListener('change', () => this.toggleNightMode());
+            if (localStorage.getItem('nightMode') === 'true') {
+                document.body.classList.add('night-mode');
+                this.nightModeToggle.checked = true;
+            }
+        }
+        this.displayFiles();
 
-    let files = JSON.parse(localStorage.getItem('files')) || [];
-    let currentFileIndex = -1;
-    let ascending = true;
-    let currentFolderPath = [];
+        const saveButton = document.getElementById('saveButton');
+        if (saveButton) {
+            saveButton.addEventListener('click', this.saveFile.bind(this));
+        }
+    }
 
-    function displayFiles() {
-        filesContainer.innerHTML = '';
-        const currentFolder = getCurrentFolder();
+    generateUniqueId() {
+        return '_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    displayFiles() {
+        this.filesContainer.innerHTML = '';
+        const currentFolder = this.getCurrentFolder();
         const sortedFiles = currentFolder.slice().sort((a, b) => {
-            return ascending ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
+            return this.ascending ? a.name.localeCompare(b.name) : b.name.localeCompare(a.name);
         });
-        sortedFiles.forEach((file, index) => {
+        sortedFiles.forEach((file) => {
+            if (!file.id) {
+                file.id = this.generateUniqueId();
+            }
             const fileElement = document.createElement('div');
             fileElement.classList.add('file-item');
             const fileTypeEmoji = file.type === 'JSON' ? '📄' : '📁';
             fileElement.innerHTML = `
                 <div>
                     <span>${fileTypeEmoji} ${file.name}</span>
-                    <button class="icon-button" onclick="showRenameFileModal(${index})">✏️</button>
+                    <button class="icon-button" onclick="fileManager.showRenameFileModal('${file.id}')">✏️</button>
                 </div>
                 <div>
                     ${file.type === 'JSON'
-                        ? `<button class="button primary" onclick="editFile(${index})">Edit</button>`
-                        : `<button class="button primary" onclick="openFolder(${index})">Open</button>`
+                        ? `<button class="button primary" onclick="fileManager.editFile('${file.id}')">Edit</button>`
+                        : `<button class="button primary" onclick="fileManager.openFolder('${file.id}')">Open</button>`
                     }
-                    <button class="button secondary" onclick="executeFile(${index})">Execute</button>
-                    <button class="button" onclick="deleteFile(${index})">Delete</button>
+                    <button class="button secondary" onclick="fileManager.executeFile('${file.id}')">Execute</button>
+                    <button class="button" onclick="fileManager.deleteFile('${file.id}')">Delete</button>
                 </div>
             `;
-            filesContainer.appendChild(fileElement);
+            this.filesContainer.appendChild(fileElement);
         });
-        updatePageTitle();
+        this.updatePageTitle();
     }
 
-    function getCurrentFolder() {
-        let folder = files;
-        for (const folderName of currentFolderPath) {
+    getCurrentFolder() {
+        let folder = this.files;
+        for (const folderName of this.currentFolderPath) {
             const nextFolder = folder.find(file => file.name === folderName && file.type === 'Folder');
             if (nextFolder) {
                 folder = nextFolder.content;
@@ -53,163 +73,204 @@ document.addEventListener('DOMContentLoaded', () => {
         return folder;
     }
 
-    function updatePageTitle() {
+    updatePageTitle() {
         const titleElement = document.querySelector('#pageTitle');
-        titleElement.innerHTML = currentFolderPath.length > 0 ? `Files - ${currentFolderPath.join(' / ')}` : 'Files';
+        if (titleElement) {
+            titleElement.innerHTML = this.currentFolderPath.length > 0 ? `Files - ${this.currentFolderPath.join(' / ')}` : 'Files';
+        }
     }
 
-    function showAddFileModal() {
-        addFileModal.style.display = 'flex';
+    showAddFileModal() {
+        if (this.addFileModal) {
+            this.addFileModal.style.display = 'flex';
+        }
     }
 
-    function closeAddFileModal() {
-        addFileModal.style.display = 'none';
+    closeAddFileModal() {
+        if (this.addFileModal) {
+            this.addFileModal.style.display = 'none';
+        }
     }
 
-    function addNewFile() {
-        const fileName = fileNameInput.value.trim();
+    addNewFile() {
+        const fileName = this.fileNameInput.value.trim();
         if (fileName) {
-            const currentFolder = getCurrentFolder();
-            currentFolder.push({ name: fileName, type: fileType.value, content: fileType.value === 'JSON' ? '' : [] });
-            localStorage.setItem('files', JSON.stringify(files));
-            displayFiles();
-            fileNameInput.value = '';
-            closeAddFileModal();
+            const currentFolder = this.getCurrentFolder();
+            const newFile = { name: fileName, type: this.fileType.value, content: this.fileType.value === 'JSON' ? '' : [], id: this.generateUniqueId() };
+            currentFolder.push(newFile);
+            localStorage.setItem('files', JSON.stringify(this.files));
+            this.displayFiles();
+            this.fileNameInput.value = '';
+            this.closeAddFileModal();
         } else {
             alert('File name cannot be empty.');
         }
     }
 
-    function editFile(index) {
-        const currentFolder = getCurrentFolder();
-        const file = currentFolder[index];
-        if (file.type === 'JSON') {
-            currentFileIndex = index;
-            const editPage = document.getElementById('editPage');
-            const filesPage = document.getElementById('filesPage');
-            const currentEditFileName = document.getElementById('currentEditFileName');
-            editPage.classList.remove('hidden');
-            filesPage.classList.add('hidden');
-            currentEditFileName.textContent = file.name;
+    editFile(id) {
+        const file = this.findFileById(this.files, id);
+        if (file && file.type === 'JSON') {
+            document.getElementById('currentEditFileName').textContent = file.name;
             document.getElementById('fileContent').value = file.content;
+            this.currentFile = file;
+            console.log('editFile - this.currentFile set to:', this.currentFile);
+            document.getElementById('filesPage').classList.add('hidden');
+            document.getElementById('editPage').classList.remove('hidden');
+        } else {
+            alert('Unable to edit the selected file.');
         }
     }
 
-    function executeFile(index) {
-        const currentFolder = getCurrentFolder();
-        const file = currentFolder[index];
-        if (file.type === 'JSON') {
-            alert(`Executing the following content:\n${file.content}`);
+    saveFile() {
+        console.log('saveFile: this =', this);
+        console.log('saveFile: currentFile =', this.currentFile);
+        const fileContentElement = document.getElementById('fileContent');
+        if (this.currentFile && fileContentElement) {
+            this.currentFile.content = fileContentElement.value;
+            localStorage.setItem('files', JSON.stringify(this.files));
+            alert('File saved successfully!');
+            this.currentFile = null;
+            this.displayFiles();
+            document.getElementById('editPage').classList.add('hidden');
+            document.getElementById('filesPage').classList.remove('hidden');
         } else {
-            const contentToExecute = executeAllJsonInFolder(file);
+            alert('No file is currently being edited or file content element is missing.');
+        }
+    }
+
+    executeFile(id) {
+        const file = this.findFileById(this.files, id);
+        if (file && file.type === 'JSON') {
+            alert(`Executing the following content:
+${file.content}`);
+        } else if (file && file.type === 'Folder') {
+            const contentToExecute = this.executeAllJsonInFolder(file);
             if (contentToExecute.length > 0) {
-                alert(`Executing the following content:\n${contentToExecute.join('\n')}`);
+                alert(`Executing the following content:
+${contentToExecute.join('\n')}`);
             } else {
                 alert('No JSON content found to execute.');
             }
         }
     }
 
-    function executeAllJsonInFolder(folder) {
+    executeAllJsonInFolder(folder) {
         let jsonContents = [];
         folder.content.forEach(file => {
             if (file.type === 'JSON') {
                 jsonContents.push(file.content);
             } else if (file.type === 'Folder') {
-                jsonContents = jsonContents.concat(executeAllJsonInFolder(file));
+                jsonContents = jsonContents.concat(this.executeAllJsonInFolder(file));
             }
         });
         return jsonContents;
     }
 
-    function openFolder(index) {
-        const currentFolder = getCurrentFolder();
-        const file = currentFolder[index];
-        if (file.type === 'Folder') {
-            currentFolderPath.push(file.name);
-            displayFiles();
+    openFolder(id) {
+        const file = this.findFileById(this.files, id);
+        if (file && file.type === 'Folder') {
+            this.currentFolderPath.push(file.name);
+            this.displayFiles();
         }
     }
 
-    function deleteFile(index) {
-        const currentFolder = getCurrentFolder();
-        const file = currentFolder[index];
-        if (confirm(`Are you sure you want to delete "${file.name}"?`)) {
-            currentFolder.splice(index, 1);
-            localStorage.setItem('files', JSON.stringify(files));
-            displayFiles();
+    deleteFile(id) {
+        const currentFolder = this.getCurrentFolder();
+        const fileIndex = currentFolder.findIndex(file => file.id === id);
+        if (fileIndex !== -1 && confirm(`Are you sure you want to delete "${currentFolder[fileIndex].name}"?`)) {
+            currentFolder.splice(fileIndex, 1);
+            localStorage.setItem('files', JSON.stringify(this.files));
+            this.displayFiles();
         }
     }
 
-    function showRenameFileModal(index) {
-        currentFileIndex = index;
-        const currentFolder = getCurrentFolder();
-        newFileNameInput.value = currentFolder[index].name;
-        renameFileModal.style.display = 'flex';
+    showRenameFileModal(id) {
+        const file = this.findFileById(this.files, id);
+        if (file) {
+            this.currentFile = file;
+            this.newFileNameInput.value = file.name;
+            if (this.renameFileModal) {
+                this.renameFileModal.style.display = 'flex';
+            }
+        }
     }
 
-    function closeRenameFileModal() {
-        renameFileModal.style.display = 'none';
+    closeRenameFileModal() {
+        if (this.renameFileModal) {
+            this.renameFileModal.style.display = 'none';
+        }
     }
 
-    function renameFile() {
-        const newName = newFileNameInput.value.trim();
-        if (newName) {
-            const currentFolder = getCurrentFolder();
-            currentFolder[currentFileIndex].name = newName;
-            localStorage.setItem('files', JSON.stringify(files));
-            displayFiles();
-            newFileNameInput.value = '';
-            closeRenameFileModal();
+    renameFile() {
+        const newName = this.newFileNameInput.value.trim();
+        if (newName && this.currentFile) {
+            this.currentFile.name = newName;
+            localStorage.setItem('files', JSON.stringify(this.files));
+            this.displayFiles();
+            this.newFileNameInput.value = '';
+            this.closeRenameFileModal();
         } else {
             alert('File name cannot be empty.');
         }
     }
 
-    function toggleFileList() {
-        ascending = !ascending;
-        document.querySelector('.list-button').innerText = `List ${ascending ? '↑' : '↓'}`;
-        displayFiles();
+    toggleFileList() {
+        this.ascending = !this.ascending;
+        const listButton = document.querySelector('.list-button');
+        if (listButton) {
+            listButton.innerText = `List ${this.ascending ? '↑' : '↓'}`;
+        }
+        this.displayFiles();
     }
 
-    function goBack() {
-        if (currentFolderPath.length > 0) {
-            currentFolderPath.pop();
-            displayFiles();
+    goBack() {
+        if (this.currentFolderPath.length > 0) {
+            this.currentFolderPath.pop();
+            this.displayFiles();
         } else {
-            const editPage = document.getElementById('editPage');
-            const filesPage = document.getElementById('filesPage');
-            editPage.classList.add('hidden');
-            filesPage.classList.remove('hidden');
+            document.getElementById('editPage').classList.add('hidden');
+            document.getElementById('filesPage').classList.remove('hidden');
         }
     }
 
-    function toggleNightMode(event) {
-        document.body.classList.toggle('night-mode', event.target.checked);
-        localStorage.setItem('nightMode', event.target.checked);
+    toggleNightMode() {
+        if (this.nightModeToggle) {
+            const nightModeEnabled = this.nightModeToggle.checked;
+            if (nightModeEnabled) {
+                document.body.classList.add('night-mode');
+                localStorage.setItem('nightMode', 'true');
+            } else {
+                document.body.classList.remove('night-mode');
+                localStorage.setItem('nightMode', 'false');
+            }
+        }
     }
 
-    if (localStorage.getItem('nightMode') === 'true') {
-        document.body.classList.add('night-mode');
-        nightModeToggleFiles.checked = true;
-        nightModeToggleEdit.checked = true;
+    findFileById(files, id) {
+        for (const file of files) {
+            if (file.id === id) {
+                return file;
+            } else if (file.type === 'Folder') {
+                const found = this.findFileById(file.content, id);
+                if (found) return found;
+            }
+        }
+        return null;
     }
+}
 
-    nightModeToggleFiles.addEventListener('change', toggleNightMode);
-    nightModeToggleEdit.addEventListener('change', toggleNightMode);
+const fileManager = new FileManager();
 
-    displayFiles();
-
-    window.showAddFileModal = showAddFileModal;
-    window.closeAddFileModal = closeAddFileModal;
-    window.addNewFile = addNewFile;
-    window.editFile = editFile;
-    window.executeFile = executeFile;
-    window.openFolder = openFolder;
-    window.deleteFile = deleteFile;
-    window.showRenameFileModal = showRenameFileModal;
-    window.closeRenameFileModal = closeRenameFileModal;
-    window.renameFile = renameFile;
-    window.toggleFileList = toggleFileList;
-    window.goBack = goBack;
-});
+window.showAddFileModal = fileManager.showAddFileModal.bind(fileManager);
+window.closeAddFileModal = fileManager.closeAddFileModal.bind(fileManager);
+window.addNewFile = fileManager.addNewFile.bind(fileManager);
+window.editFile = fileManager.editFile.bind(fileManager);
+window.saveFile = fileManager.saveFile.bind(fileManager);
+window.executeFile = fileManager.executeFile.bind(fileManager);
+window.openFolder = fileManager.openFolder.bind(fileManager);
+window.deleteFile = fileManager.deleteFile.bind(fileManager);
+window.showRenameFileModal = fileManager.showRenameFileModal.bind(fileManager);
+window.closeRenameFileModal = fileManager.closeRenameFileModal.bind(fileManager);
+window.renameFile = fileManager.renameFile.bind(fileManager);
+window.toggleFileList = fileManager.toggleFileList.bind(fileManager);
+window.goBack = fileManager.goBack.bind(fileManager);

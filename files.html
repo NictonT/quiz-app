@@ -4,38 +4,57 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Manager</title>
-    <link rel="stylesheet" href="files.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body class="night-mode">
-    <div class="container">
+<body>
+
+    <div class="slide active" id="filesPage">
+        <button class="button secondary back-button" onclick="goBack()">Back</button>
         <div class="header">
             <h1 id="pageTitle">Files</h1>
             <div class="toggle-container">
-                <input type="checkbox" id="nightModeToggle" class="toggle">
-                <label for="nightModeToggle" class="toggle-label">Night Mode</label>
+                <input type="checkbox" id="nightModeToggleFiles" class="toggle" />
+                <label for="nightModeToggleFiles" class="toggle-label"></label>
             </div>
         </div>
-        <div class="content">
+        <div class="content" id="fileContentContainer">
             <div class="control-panel">
                 <button class="button secondary list-button" onclick="toggleFileList()">List ↑</button>
                 <button class="button secondary" onclick="showAddFileModal()">+</button>
-                <button class="button secondary" onclick="goBack()">Back</button>
+                <button class="button" onclick="clearLocalStorage()">Clear File Storage</button>
             </div>
             <div id="filesContainer"></div>
+        </div>
+    </div>
+
+    <div class="slide hidden" id="editPage">
+        <button class="button secondary back-button" onclick="closeEditFileModal()">Back</button>
+        <div class="header">
+            <h1>Edit File
+                <span id="currentEditFileName" class="file-name"></span>
+            </h1>
+            <div class="toggle-container">
+                <input type="checkbox" id="nightModeToggleEdit" class="toggle">
+                <label for="nightModeToggleEdit" class="toggle-label"></label>
+            </div>
+        </div>
+        <div class="content">
+            <textarea id="fileContent" rows="20"></textarea>
+            <button class="button primary save-button" onclick="saveFile()">Save</button>
+            <button class="button secondary execute-button" onclick="executeFileContent()">Execute</button>
         </div>
     </div>
 
     <div id="addFileModal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="closeAddFileModal()">×</span>
-            <h2>Add New File or Folder</h2>
-            <label for="fileType">Type:</label>
+            <h2>Add New File</h2>
+            <label for="fileType">File Type:</label>
             <select id="fileType">
                 <option value="JSON">JSON</option>
                 <option value="Folder">Folder</option>
             </select>
-            <input type="text" id="fileNameInput" placeholder="Enter name">
+            <input type="text" id="fileNameInput" placeholder="Enter file name">
             <button class="button primary" onclick="addNewFile()">Add</button>
         </div>
     </div>
@@ -43,13 +62,97 @@
     <div id="renameFileModal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="closeRenameFileModal()">×</span>
-            <h2>Rename File or Folder</h2>
-            <input type="text" id="newFileNameInput" placeholder="Enter new name">
+            <h2>Rename File</h2>
+            <input type="text" id="newFileNameInput" placeholder="Enter new file name">
             <button class="button primary" onclick="renameFile()">Rename</button>
         </div>
     </div>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const filesContainer = document.getElementById('filesContainer');
+            const editPage = document.getElementById('editPage');
+            const filesPage = document.getElementById('filesPage');
+            const currentEditFileName = document.getElementById('currentEditFileName');
+            const fileContent = document.getElementById('fileContent');
+            const nightModeToggleEdit = document.getElementById('nightModeToggleEdit');
+            let currentEditFileId = null;
+
+            function openEditFileModal(fileId) {
+                const files = JSON.parse(localStorage.getItem('files')) || [];
+                const file = findFileById(files, fileId);
+
+                if (!file) {
+                    alert('File not found.');
+                    return;
+                }
+                currentEditFileId = fileId;
+                currentEditFileName.textContent = file.name;
+                fileContent.value = file.content || '';
+                filesPage.classList.add('hidden');
+                editPage.classList.remove('hidden');
+            }
+
+            function closeEditFileModal() {
+                filesPage.classList.remove('hidden');
+                editPage.classList.add('hidden');
+            }
+
+            function saveFile() {
+                if (!currentEditFileId) {
+                    alert('Error: No file is currently being edited.');
+                    return;
+                }
+
+                const files = JSON.parse(localStorage.getItem('files')) || [];
+                const file = findFileById(files, currentEditFileId);
+
+                if (file) {
+                    file.content = fileContent.value;
+                    localStorage.setItem('files', JSON.stringify(files));
+                    alert('File saved successfully!');
+                } else {
+                    alert('Error: File could not be found for saving.');
+                }
+            }
+
+            function executeFileContent() {
+                if (!currentEditFileId) {
+                    alert('Error: No file is currently being edited.');
+                    return;
+                }
+                const content = fileContent.value;
+                alert(`Executing the following content:\n${content}`);
+            }
+
+            function findFileById(files, id) {
+                for (const file of files) {
+                    if (file.id === id) {
+                        return file;
+                    } else if (file.type === 'Folder' && Array.isArray(file.content)) {
+                        const found = findFileById(file.content, id);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            }
+
+            nightModeToggleEdit.addEventListener('change', () => {
+                document.body.classList.toggle('night-mode', nightModeToggleEdit.checked);
+                localStorage.setItem('nightMode', nightModeToggleEdit.checked);
+            });
+
+            if (localStorage.getItem('nightMode') === 'true') {
+                document.body.classList.add('night-mode');
+                nightModeToggleEdit.checked = true;
+            }
+
+            window.openEditFileModal = openEditFileModal;
+            window.closeEditFileModal = closeEditFileModal;
+            window.saveFile = saveFile;
+            window.executeFileContent = executeFileContent;
+        });
+    </script>
     <script src="files.js"></script>
-    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
 </body>
 </html>

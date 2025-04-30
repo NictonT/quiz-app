@@ -59,16 +59,21 @@ document.addEventListener('DOMContentLoaded', () => {
         alert("No quiz data found. Please select a quiz file or folder to execute.");
         goToHomePage();
     }
+
     updateNightMode();
 });
 
 function updateNightMode() {
     const nightModeToggle = document.getElementById('nightModeToggleQuiz');
     if (!nightModeToggle) {
-        console.warn("Night mode toggle not found in execute.html");
+        console.warn("Night mode toggle ('nightModeToggleQuiz') not found in execute.html.");
+        const nightModeActive = localStorage.getItem('nightMode') === 'true';
+        document.body.classList.toggle('night-mode', nightModeActive);
         return;
     }
+
     const nightModeActive = localStorage.getItem('nightMode') === 'true';
+
     document.body.classList.toggle('night-mode', nightModeActive);
     nightModeToggle.checked = nightModeActive;
 
@@ -85,7 +90,6 @@ function showSlide(slideId) {
         slide.classList.add("hidden");
         slide.classList.remove("active");
     });
-
     const slideToShow = document.getElementById(slideId);
     if (slideToShow) {
         slideToShow.classList.remove("hidden");
@@ -106,29 +110,29 @@ function loadQuestion() {
          if (!question || !question.question || !question.answers || typeof question.answers !== 'object') {
               console.error(`Invalid question structure at index ${currentIndex}:`, question);
               alert(`Error: Invalid question data encountered at question ${currentIndex + 1}. Skipping.`);
-              currentIndex++;
-              completedQuestions++;
-              loadQuestion();
-              return;
+              currentIndex++; completedQuestions++; loadQuestion(); return;
          }
 
         const questionTextEl = document.getElementById('questionText');
-        if(questionTextEl) questionTextEl.innerText = question.question;
+        if(questionTextEl) questionTextEl.innerText = question.question; else console.error("questionText element not found");
 
         const answersContainer = document.getElementById('answersContainer');
-        if (!answersContainer) {
-             console.error("Answers container not found!");
-             return;
-        }
+        if (!answersContainer) { console.error("answersContainer not found!"); return; }
         answersContainer.innerHTML = '';
 
         const shuffledDisplayAnswers = shuffleAnswers(question.answers);
 
         for (let displayKey in shuffledDisplayAnswers) {
             const originalAnswerText = shuffledDisplayAnswers[displayKey];
+            const originalKey = Object.keys(question.answers).find(key => question.answers[key] === originalAnswerText);
+            if (!originalKey) {
+                console.warn(`Could not find original key for answer text "${originalAnswerText}" in question ${currentIndex}`);
+                continue;
+            }
+
             let answerElement = document.createElement('div');
             answerElement.classList.add('answer');
-            answerElement.dataset.originalKey = Object.keys(question.answers).find(key => question.answers[key] === originalAnswerText);
+            answerElement.dataset.originalKey = originalKey;
             answerElement.dataset.displayKey = displayKey;
             answerElement.dataset.answerText = originalAnswerText;
 
@@ -142,10 +146,7 @@ function loadQuestion() {
         const skipButton = document.getElementById('skipButton');
         const helpButton = document.querySelector('.help-button');
 
-         if(submitButton) {
-             submitButton.style.display = 'block';
-             submitButton.disabled = true;
-         }
+         if(submitButton) { submitButton.style.display = 'block'; submitButton.disabled = true; }
          if(skipButton) skipButton.style.display = retryingQuestion ? 'none' : 'block';
          if(helpButton) helpButton.style.display = 'block';
 
@@ -178,17 +179,18 @@ function shuffleAnswers(answersObject) {
 }
 
 function selectAnswer(selectedElement) {
-     if (!selectedElement) return;
+     if (!selectedElement || !selectedElement.dataset) return;
 
      const displayKey = selectedElement.dataset.displayKey;
      const originalKey = selectedElement.dataset.originalKey;
      const answerText = selectedElement.dataset.answerText;
 
-     selectedAnswer = {
-         displayKey: displayKey,
-         originalKey: originalKey,
-         answerText: answerText
-     };
+     if (typeof displayKey === 'undefined' || typeof originalKey === 'undefined' || typeof answerText === 'undefined') {
+         console.error("Missing data attributes on selected answer element:", selectedElement);
+         return;
+     }
+
+     selectedAnswer = { displayKey, originalKey, answerText };
 
      document.querySelectorAll('.answer').forEach(el => el.classList.remove('selected'));
      selectedElement.classList.add('selected');
@@ -198,54 +200,67 @@ function selectAnswer(selectedElement) {
  }
 
 function submitAnswer() {
-    if (!selectedAnswer) {
-        alert('Please select an answer first.');
-        return;
-    }
+    if (!selectedAnswer) { alert('Please select an answer first.'); return; }
 
     const currentQuestion = randomizedQuestions[currentIndex];
     if (!currentQuestion || !currentQuestion.answers || !currentQuestion.correctAnswer) {
-         console.error("Cannot submit, invalid current question data:", currentQuestion);
-         alert("Error processing answer. Invalid question data.");
-         return;
+         alert("Error processing answer. Invalid question data."); return;
     }
 
      const isCorrect = selectedAnswer.originalKey === currentQuestion.correctAnswer;
 
+     document.querySelectorAll('.answer').forEach(el => {
+        el.classList.remove('correct', 'wrong');
+        el.style.border = '';
+        el.style.fontWeight = '';
+        el.style.opacity = '';
+        el.onclick = () => selectAnswer(el);
+     });
+
      if (isCorrect) {
          recordCorrectAnswer(currentIndex, selectedAnswer);
          removeFromWrongAnswers(currentQuestion.question);
+         const correctElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === selectedAnswer.originalKey);
+         if(correctElement) correctElement.classList.add('correct');
+
      } else {
          recordWrongAnswer(currentIndex, selectedAnswer, false);
+         const selectedElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === selectedAnswer.originalKey);
+         const correctElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === currentQuestion.correctAnswer);
+         if(selectedElement) selectedElement.classList.add('wrong');
+         if(correctElement) correctElement.classList.add('correct');
      }
 
-     if (!retryingQuestion) {
-         completedQuestions++;
-     }
+     document.querySelectorAll('.answer').forEach(el => el.onclick = null);
+     const submitButton = document.getElementById('submitButton');
+     const helpButton = document.querySelector('.help-button');
+     const skipButton = document.getElementById('skipButton');
+     if (submitButton) submitButton.disabled = true;
+     if (helpButton) helpButton.style.display = 'none';
+     if (skipButton) skipButton.style.display = 'none';
 
-     if (retryingQuestion) {
-         retryingQuestion = false;
-         retryIndex = -1;
-         showResults();
-     } else {
-         currentIndex++;
-         loadQuestion();
-     }
+     setTimeout(() => {
+         if (!retryingQuestion) {
+             completedQuestions++;
+         }
 
-     updateProgressBar();
+         if (retryingQuestion) {
+             retryingQuestion = false;
+             retryIndex = -1;
+             showResults();
+         } else {
+             currentIndex++;
+             loadQuestion();
+         }
+         updateProgressBar();
+     }, 1500);
  }
 
 function skipQuestion() {
     if (retryingQuestion) return;
-
      const currentQuestion = randomizedQuestions[currentIndex];
-     if (!currentQuestion) {
-          console.error("Cannot skip, invalid current question data.");
-          return;
-     }
-
+     if (!currentQuestion) return;
     recordWrongAnswer(currentIndex, null, true);
-
     completedQuestions++;
     currentIndex++;
     updateProgressBar();
@@ -253,23 +268,21 @@ function skipQuestion() {
 }
 
 function showAnswer() {
-    if (currentIndex < randomizedQuestions.length) {
+    if (currentIndex >= 0 && currentIndex < randomizedQuestions.length) {
         const question = randomizedQuestions[currentIndex];
-         if (!question || !question.answers || !question.correctAnswer) {
-             console.error("Cannot show answer, invalid question data:", question);
-             return;
-         }
+        if (!question || !question.answers || !question.correctAnswer) return;
         const correctAnswerKey = question.correctAnswer;
 
         document.querySelectorAll('.answer').forEach(el => {
             if (el.dataset.originalKey === correctAnswerKey) {
+                el.classList.remove('wrong', 'selected');
                 el.classList.add('correct');
                 el.style.border = '2px solid green';
                 el.style.fontWeight = 'bold';
             } else {
                  el.style.opacity = '0.6';
             }
-             el.onclick = null;
+            el.onclick = null;
         });
 
          const submitButton = document.getElementById('submitButton');
@@ -285,29 +298,21 @@ function showAnswer() {
 function recordWrongAnswer(questionIndex, selectedAnswerObj, skipped = false) {
     const question = randomizedQuestions[questionIndex];
     if (!question) return;
-
     const existingWrongIndex = wrongAnswers.findIndex(q => q.question === question.question);
-    if (existingWrongIndex !== -1) {
-        wrongAnswers.splice(existingWrongIndex, 1);
-    }
-
+    if (existingWrongIndex !== -1) wrongAnswers.splice(existingWrongIndex, 1);
     wrongAnswers.push({
         question: question.question,
         selected: selectedAnswerObj ? selectedAnswerObj.answerText : null,
-        correct: question.answers[question.correctAnswer],
+        correct: question.answers[question.correctAnswer] || '[Answer Not Found]',
         skipped: skipped
     });
 }
 
 function recordCorrectAnswer(questionIndex, selectedAnswerObj) {
     const question = randomizedQuestions[questionIndex];
-     if (!question) return;
-
+    if (!question) return;
     const existingCorrectIndex = correctAnswers.findIndex(q => q.question === question.question);
-    if (existingCorrectIndex !== -1) {
-        correctAnswers.splice(existingCorrectIndex, 1);
-    }
-
+    if (existingCorrectIndex !== -1) correctAnswers.splice(existingCorrectIndex, 1);
     correctAnswers.push({
         question: question.question,
         correct: selectedAnswerObj.answerText
@@ -316,9 +321,7 @@ function recordCorrectAnswer(questionIndex, selectedAnswerObj) {
 
 function removeFromWrongAnswers(questionText) {
     const index = wrongAnswers.findIndex(item => item.question === questionText);
-    if (index !== -1) {
-        wrongAnswers.splice(index, 1);
-    }
+    if (index !== -1) wrongAnswers.splice(index, 1);
 }
 
 function showResults() {
@@ -331,76 +334,62 @@ function showResults() {
     const wrongChartEl = document.getElementById('wrongPercentage');
 
     if (!correctList || !wrongList || !scoreTextEl || !correctChartEl || !wrongChartEl) {
-        console.error("One or more results page elements are missing!");
-        return;
+        console.error("Results page elements missing!"); return;
     }
 
-    correctList.innerHTML = '';
-    wrongList.innerHTML = '';
-    correctList.classList.add('hidden');
-    wrongList.classList.add('hidden');
+    correctList.innerHTML = ''; wrongList.innerHTML = '';
+    correctList.classList.add('hidden'); wrongList.classList.add('hidden');
 
     correctAnswers.forEach(item => {
-        const listItem = document.createElement('li');
-        listItem.innerHTML = `<div class="indicator correct"></div> ${item.question} <br><i><small>(Correct: ${item.correct})</small></i>`;
-        listItem.onclick = () => retryQuestion(item.question);
-        correctList.appendChild(listItem);
+        const li = document.createElement('li');
+        li.innerHTML = `<div class="indicator correct"></div> ${item.question} <br><i><small>(Correct: ${item.correct || 'N/A'})</small></i>`;
+        li.onclick = () => retryQuestion(item.question);
+        correctList.appendChild(li);
     });
 
     wrongAnswers.forEach(item => {
-        const listItem = document.createElement('li');
-        const indicatorClass = item.skipped ? 'skipped' : 'wrong';
-         let details = item.skipped ? '<i>(Skipped)</i>' : `<i><small>(Selected: ${item.selected || 'None'}, Correct: ${item.correct})</small></i>`;
-        listItem.innerHTML = `<div class="indicator ${indicatorClass}"></div> ${item.question} <br>${details}`;
-        listItem.onclick = () => retryQuestion(item.question);
-        wrongList.appendChild(listItem);
+        const li = document.createElement('li');
+        const indicator = item.skipped ? 'skipped' : 'wrong';
+        let details = item.skipped ? '<i>(Skipped)</i>' : `<i><small>(Selected: ${item.selected || 'None'}, Correct: ${item.correct || 'N/A'})</small></i>`;
+        li.innerHTML = `<div class="indicator ${indicator}"></div> ${item.question} <br>${details}`;
+        li.onclick = () => retryQuestion(item.question);
+        wrongList.appendChild(li);
     });
 
-    const finalCorrectCount = correctAnswers.length;
-    const finalWrongCount = wrongAnswers.length;
-    const finalTotalAttempted = finalCorrectCount + finalWrongCount;
-
-    let correctPercentage = 0;
-    let wrongPercentage = 0;
-
-    if (finalTotalAttempted > 0) {
-        correctPercentage = Math.round((finalCorrectCount / finalTotalAttempted) * 100);
-        wrongPercentage = 100 - correctPercentage;
+    const finalCorrect = correctAnswers.length;
+    const finalWrong = wrongAnswers.length;
+    const finalTotal = finalCorrect + finalWrong;
+    let correctPercent = 0;
+    let wrongPercent = 0;
+    if (finalTotal > 0) {
+        correctPercent = Math.round((finalCorrect / finalTotal) * 100);
+        wrongPercent = 100 - correctPercent;
     }
 
-    scoreTextEl.innerText = `Score: ${correctPercentage}% (${finalCorrectCount}/${finalTotalAttempted})`;
+    scoreTextEl.innerText = `Score: ${correctPercent}% (${finalCorrect}/${finalTotal})`;
+    correctChartEl.style.setProperty('--percentage', `${correctPercent}%`);
+    wrongChartEl.style.setProperty('--percentage', `${wrongPercent}%`);
+    correctChartEl.setAttribute('data-count', finalCorrect);
+    wrongChartEl.setAttribute('data-count', finalWrong);
 
-    correctChartEl.style.setProperty('--percentage', `${correctPercentage}%`);
-    wrongChartEl.style.setProperty('--percentage', `${wrongPercentage}%`);
-
-    correctChartEl.setAttribute('data-count', finalCorrectCount);
-    wrongChartEl.setAttribute('data-count', finalWrongCount);
-
-     correctChartEl.onclick = null;
-     correctChartEl.onclick = toggleCorrectList;
-     wrongChartEl.onclick = null;
-     wrongChartEl.onclick = toggleWrongList;
+    correctChartEl.onclick = toggleCorrectList;
+    wrongChartEl.onclick = toggleWrongList;
 }
 
 function updateProgressBar() {
-    const progressBarFill = document.getElementById('progressBarFill');
-    const questionCountEl = document.getElementById('questionCount');
-
-    if (!progressBarFill || !questionCountEl) return;
-
-    let progressPercentage = 0;
+    const barFill = document.getElementById('progressBarFill');
+    const countEl = document.getElementById('questionCount');
+    if (!barFill || !countEl) return;
+    let percent = 0;
     if (totalQuestions > 0) {
-        const currentCompleted = Math.min(completedQuestions, totalQuestions);
-        progressPercentage = Math.round((currentCompleted / totalQuestions) * 100);
+        percent = Math.round((Math.min(completedQuestions, totalQuestions) / totalQuestions) * 100);
     }
-
-    progressBarFill.style.width = `${progressPercentage}%`;
-    questionCountEl.innerText = `${progressPercentage}%`;
+    barFill.style.width = `${percent}%`;
+    countEl.innerText = `${percent}%`;
 }
 
 function retryQuestion(questionText) {
-    const originalIndex = randomizedQuestions.findIndex(q => q.question === questionText);
-
+    const originalIndex = randomizedQuestions.findIndex(q => q && q.question === questionText);
     if (originalIndex !== -1) {
          retryingQuestion = true;
          retryIndex = originalIndex;
@@ -408,48 +397,32 @@ function retryQuestion(questionText) {
          showSlide('quizPage');
          loadQuestion();
     } else {
-        console.error(`Could not find question "${questionText}" to retry.`);
         alert("Error: Could not find the selected question to retry.");
     }
 }
 
 function toggleCorrectList() {
-    const correctList = document.getElementById('correctList');
-    if (correctList) {
-        correctList.classList.toggle('hidden');
-    }
+    const list = document.getElementById('correctList');
+    if (list) list.classList.toggle('hidden');
 }
 
 function toggleWrongList() {
-    const wrongList = document.getElementById('wrongList');
-     if (wrongList) {
-        wrongList.classList.toggle('hidden');
-    }
+    const list = document.getElementById('wrongList');
+    if (list) list.classList.toggle('hidden');
 }
 
 function redoWrongAnswers() {
-    if (wrongAnswers.length === 0) {
-        alert("No wrong answers to redo!");
-        return;
-    }
-    const questionsToRedo = wrongAnswers.map(item => {
-        return questions.find(q => q.question === item.question);
-    }).filter(q => q !== undefined);
-
+    if (wrongAnswers.length === 0) { alert("No wrong answers to redo!"); return; }
+    const questionsToRedo = wrongAnswers.map(item => questions.find(q => q.question === item.question)).filter(Boolean);
     if (questionsToRedo.length > 0) {
         randomizedQuestions = shuffleArray(questionsToRedo);
         resetQuizStateForNewRound();
         loadQuestion();
-    } else {
-        alert("Error finding questions to redo.");
-    }
+    } else { alert("Error finding questions to redo."); }
 }
 
 function restartQuiz() {
-    if (questions.length === 0) {
-         alert("No questions loaded to restart.");
-         return;
-    }
+    if (questions.length === 0) { alert("No questions loaded to restart."); return; }
     randomizedQuestions = shuffleArray([...questions]);
     resetQuizStateForNewRound();
     loadQuestion();
@@ -460,10 +433,10 @@ function resetQuizStateForNewRound() {
     correctCount = 0;
     wrongCount = 0;
     selectedAnswer = null;
-
     completedQuestions = 0;
     totalQuestions = randomizedQuestions.length;
-
+    retryingQuestion = false;
+    retryIndex = -1;
     showSlide('quizPage');
     updateProgressBar();
 }

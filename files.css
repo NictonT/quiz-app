@@ -47,8 +47,9 @@ h2 {
 }
 
 .hidden {
-    display: none;
+    display: none !important; /* Use important to override potential conflicts */
 }
+
 
 .slide {
     background-color: #fff;
@@ -71,11 +72,14 @@ body.night-mode .slide {
 
 .slide.hidden {
     transform: translateX(-100%);
+    /* display: none; removed - use hidden class */
 }
 
 .slide.active {
     transform: translateX(0);
+     /* display: block; removed - handled by removing hidden */
 }
+
 
 .header {
     display: flex;

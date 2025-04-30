@@ -1,10 +1,9 @@
 class FileManager {
     constructor() {
         this.files = JSON.parse(localStorage.getItem('files')) || [];
-        this.currentFolderPath = []; // Array of folder names representing the path
+        this.currentFolderPath = [];
         this.ascending = true;
 
-        // Cache DOM elements
         this.filesContainer = document.getElementById('filesContainer');
         this.fileNameInput = document.getElementById('fileNameInput');
         this.fileType = document.getElementById('fileType');
@@ -20,24 +19,18 @@ class FileManager {
         this.nightModeToggleFiles = document.getElementById('nightModeToggleFiles');
         this.nightModeToggleEdit = document.getElementById('nightModeToggleEdit');
 
-        // Visual Editor Elements
         this.viewToggleBtn = document.getElementById('viewToggleBtn');
         this.codeEditorView = document.getElementById('codeEditorView');
         this.visualEditorView = document.getElementById('visualEditorView');
         this.visualEditorContainer = document.getElementById('visualEditorContainer');
 
-        this.currentFileId = null; // Store ID of the file being edited/renamed
-        this.currentEditorView = 'code'; // 'code' or 'visual'
-        this.visualEditorData = null; // Holds the parsed JSON data for the visual editor
+        this.currentFileId = null;
+        this.currentEditorView = 'code';
+        this.visualEditorData = null;
 
-        // Initialize Night Mode
         this.initNightMode();
-
-        // Initial display
         this.displayFiles();
     }
-
-    // --- Core File System Logic ---
 
     generateUniqueId() {
         return '_' + Math.random().toString(36).substr(2, 9);
@@ -55,7 +48,6 @@ class FileManager {
         return null;
     }
 
-     // Finds a file by ID within the *entire* file structure
      findFileAnywhere(id) {
          return this.findFileById(this.files, id);
      }
@@ -65,33 +57,33 @@ class FileManager {
         let currentLevel = this.files;
         for (const folderId of this.currentFolderPath) {
             const nextFolder = currentLevel.find(file => file.id === folderId && file.type === 'Folder');
-            if (nextFolder) {
+            if (nextFolder && Array.isArray(nextFolder.content)) {
                 folderContent = nextFolder.content;
-                currentLevel = nextFolder.content; // Update level for next iteration
+                currentLevel = nextFolder.content;
             } else {
-                console.error("Could not find folder in path:", folderId);
-                return []; // Path is broken
+                console.error("Could not find folder in path or folder content is not an array:", folderId);
+                this.currentFolderPath = [];
+                return this.files;
             }
         }
         return folderContent;
     }
 
-     // Gets the actual folder object (or the root array) based on the current path
      getCurrentFolderObject() {
          if (this.currentFolderPath.length === 0) {
-             return this.files; // Root
+             return this.files;
          }
          let currentLevel = this.files;
          let folder = null;
          for (const folderId of this.currentFolderPath) {
              folder = currentLevel.find(file => file.id === folderId && file.type === 'Folder');
-             if (folder) {
+             if (folder && Array.isArray(folder.content)) {
                  currentLevel = folder.content;
              } else {
-                 return null; // Path invalid
+                 return null;
              }
          }
-         return folder; // Return the last folder object found
+         return folder;
      }
 
 
@@ -106,13 +98,18 @@ class FileManager {
                      const folder = currentLevel.find(f => f.id === folderId);
                      if (folder) {
                          pathNames.push(folder.name);
-                         currentLevel = folder.content;
+                         if(Array.isArray(folder.content)){
+                            currentLevel = folder.content;
+                         } else {
+                             pathNames.push('Invalid Folder');
+                             break;
+                         }
                      } else {
-                         pathNames.push('Unknown Folder'); // Should not happen ideally
+                         pathNames.push('Unknown Folder');
                          break;
                      }
                  }
-                 pathString = `Files - ${pathNames.join(' / ')}`;
+                 pathString = `Files / ${pathNames.join(' / ')}`;
             }
             titleElement.textContent = pathString;
         }
@@ -122,8 +119,6 @@ class FileManager {
         localStorage.setItem('files', JSON.stringify(this.files));
     }
 
-    // --- UI Display Logic ---
-
     displayFiles() {
         this.filesContainer.innerHTML = '';
         const currentFolderFiles = this.getCurrentFolderFiles();
@@ -131,12 +126,12 @@ class FileManager {
         if (!Array.isArray(currentFolderFiles)) {
             console.error("Error: currentFolderFiles is not an array.", currentFolderFiles);
             this.filesContainer.innerHTML = '<p>Error loading folder contents.</p>';
-            return; // Prevent further execution if data is corrupt
+            this.updatePageTitle();
+            return;
         }
 
 
         const sortedFiles = currentFolderFiles.slice().sort((a, b) => {
-            // Ensure names exist before comparing
             const nameA = a.name || '';
             const nameB = b.name || '';
             return this.ascending ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
@@ -144,17 +139,16 @@ class FileManager {
 
         sortedFiles.forEach((file) => {
             if (!file.id) {
-                file.id = this.generateUniqueId(); // Assign ID if missing (data correction)
+                file.id = this.generateUniqueId();
             }
             const fileElement = document.createElement('div');
             fileElement.classList.add('file-item');
 
-            let fileTypeEmoji = '❓'; // Default emoji
+            let fileTypeEmoji = '❓';
             if (file.type === 'JSON') fileTypeEmoji = '📄';
             else if (file.type === 'Folder') fileTypeEmoji = '📁';
             else if (file.type === 'HTML') fileTypeEmoji = '🌐';
 
-            // Buttons vary based on type
             let actionButtons = '';
             if (file.type === 'Folder') {
                 actionButtons = `
@@ -164,6 +158,10 @@ class FileManager {
             } else if (file.type === 'JSON' || file.type === 'HTML') {
                  actionButtons = `
                      <button class="button primary" onclick="fileManager.openEditFileModal('${file.id}')">Edit</button>
+                     <button class="button secondary" onclick="fileManager.executeFile('${file.id}')">Execute</button>
+                 `;
+            } else {
+                 actionButtons = `
                      <button class="button secondary" onclick="fileManager.executeFile('${file.id}')">Execute</button>
                  `;
             }
@@ -183,11 +181,9 @@ class FileManager {
         this.updatePageTitle();
     }
 
-    // --- Modal Handling ---
-
     showAddFileModal() {
-        this.fileNameInput.value = ''; // Clear previous input
-        this.fileType.value = 'JSON'; // Reset to default
+        this.fileNameInput.value = '';
+        this.fileType.value = 'JSON';
         if (this.addFileModal) this.addFileModal.style.display = 'flex';
     }
 
@@ -196,9 +192,9 @@ class FileManager {
     }
 
     showRenameFileModal(id) {
-        const file = this.findFileAnywhere(id); // Find file anywhere
+        const file = this.findFileAnywhere(id);
         if (file) {
-            this.currentFileId = id; // Store the ID of the file being renamed
+            this.currentFileId = id;
             this.newFileNameInput.value = file.name;
             if (this.renameFileModal) this.renameFileModal.style.display = 'flex';
         } else {
@@ -207,12 +203,12 @@ class FileManager {
     }
 
     closeRenameFileModal() {
-        this.currentFileId = null; // Clear stored ID
+        this.currentFileId = null;
         if (this.renameFileModal) this.renameFileModal.style.display = 'none';
     }
 
      openEditFileModal(id) {
-        const file = this.findFileAnywhere(id); // Find file anywhere
+        const file = this.findFileAnywhere(id);
 
         if (!file || file.type === 'Folder') {
             alert('Cannot edit this file type or file not found.');
@@ -223,21 +219,18 @@ class FileManager {
         this.currentEditFileName.textContent = file.name;
         this.fileContent.value = file.content || '';
 
-        // Reset editor view
-        this.switchToCodeView(); // Default to code view
-        this.visualEditorData = null; // Clear previous visual data
-        this.viewToggleBtn.style.display = 'none'; // Hide toggle initially
+        this.switchToCodeView();
+        this.visualEditorData = null;
+        this.viewToggleBtn.style.display = 'none';
 
-        // Check if it's JSON and potentially enable visual editor
         if (file.type === 'JSON') {
             try {
                 const jsonData = JSON.parse(file.content || '[]');
-                if (Array.isArray(jsonData)) { // Basic check if it looks like our quiz format
+                if (Array.isArray(jsonData)) {
                     this.visualEditorData = jsonData;
-                    this.viewToggleBtn.style.display = 'inline-block'; // Show toggle button
+                    this.viewToggleBtn.style.display = 'inline-block';
                 }
             } catch (e) {
-                // JSON is invalid or not the expected format, keep visual editor disabled
                 console.warn("File content is not valid JSON or not the expected format for visual editor.");
             }
         }
@@ -247,7 +240,6 @@ class FileManager {
         this.editPage.classList.remove('hidden');
         this.editPage.classList.add('active');
 
-        // Sync night mode toggle
         if (this.nightModeToggleEdit && this.nightModeToggleFiles) {
              this.nightModeToggleEdit.checked = this.nightModeToggleFiles.checked;
         }
@@ -259,16 +251,14 @@ class FileManager {
         this.editPage.classList.add('hidden');
         this.filesPage.classList.remove('hidden');
         this.filesPage.classList.add('active');
-        this.currentFileId = null; // Clear ID
-        this.visualEditorData = null; // Clear visual data
+        this.currentFileId = null;
+        this.visualEditorData = null;
     }
 
     closeExecutionModal() {
         if (this.executionModal) this.executionModal.style.display = 'none';
-        if (this.executionFrame) this.executionFrame.srcdoc = ''; // Clear content
+        if (this.executionFrame) this.executionFrame.srcdoc = '';
     }
-
-    // --- File Operations ---
 
     addNewFile() {
         const fileName = this.fileNameInput.value.trim();
@@ -280,7 +270,6 @@ class FileManager {
         }
 
         const currentFolderFiles = this.getCurrentFolderFiles();
-        // Check for duplicate names in the current folder
         if (currentFolderFiles.some(file => file.name === fileName)) {
              alert(`A file or folder named "${fileName}" already exists in this location.`);
              return;
@@ -290,7 +279,7 @@ class FileManager {
             id: this.generateUniqueId(),
             name: fileName,
             type: type,
-            content: type === 'Folder' ? [] : '' // Folders have array content, others start empty
+            content: type === 'Folder' ? [] : ''
         };
 
         currentFolderFiles.push(newFile);
@@ -308,10 +297,10 @@ class FileManager {
              if (confirm(`Are you sure you want to delete "${fileName}"?`)) {
                  currentFolderFiles.splice(fileIndex, 1);
                  this.persistFiles();
-                 this.displayFiles(); // Refresh the view of the current folder
+                 this.displayFiles();
              }
          } else {
-             alert('File not found for deletion.'); // Should not happen if UI is correct
+             alert('File not found for deletion.');
          }
     }
 
@@ -328,10 +317,9 @@ class FileManager {
             return;
         }
 
-        const file = this.findFileAnywhere(this.currentFileId); // Find the file globally
+        const file = this.findFileAnywhere(this.currentFileId);
 
         if (file) {
-            // Find the folder containing this file to check for duplicates
             const parentFolderFiles = this.getParentFolderFiles(this.currentFileId);
             if (parentFolderFiles && parentFolderFiles.some(f => f.name === newName && f.id !== this.currentFileId)) {
                 alert(`A file or folder named "${newName}" already exists in this location.`);
@@ -341,44 +329,46 @@ class FileManager {
             const oldName = file.name;
             file.name = newName;
 
-            // If the renamed item is a folder that is part of the current path, update the path name cache (if using names)
-            // Note: Since we use IDs in currentFolderPath, this isn't strictly necessary, but good for consistency if path names are displayed
-            // this.updatePathCacheIfNeeded(this.currentFileId, newName); // Optional
-
             this.persistFiles();
-            this.displayFiles(); // Refresh view
-            this.closeRenameFileModal(); // Also clears currentFileId
+            this.displayFiles();
+            if(this.editPage.classList.contains('active') && this.currentEditFileName) {
+                 this.currentEditFileName.textContent = newName;
+            }
+            this.closeRenameFileModal();
         } else {
             alert('Error: File could not be found for renaming.');
             this.closeRenameFileModal();
         }
     }
 
-    // Helper to find the parent folder's content array
     getParentFolderFiles(fileId) {
-        const findParent = (currentFiles, targetId) => {
+        const findParent = (currentFiles, targetId, parentArray = this.files) => {
+            if (!Array.isArray(currentFiles)) return null;
             for (const file of currentFiles) {
                 if (file.id === targetId) {
-                    return currentFiles; // Found in this array, return the array itself
+                    return parentArray;
                 }
                 if (file.type === 'Folder' && Array.isArray(file.content)) {
-                    const parent = findParent(file.content, targetId);
-                    if (parent) return parent; // Found in subfolder, return parent array
+                    const found = findParent(file.content, targetId, currentFiles);
+                    if (found) return found;
                 }
             }
-            return null; // Not found in this branch
+            return null;
         };
+        // Special case: if the file is at the root, return the root array
+        if (this.files.some(f => f.id === fileId)) {
+            return this.files;
+        }
         return findParent(this.files, fileId);
     }
 
 
     openFolder(id) {
-        const file = this.findFileAnywhere(id); // Find folder anywhere
+        const file = this.findFileAnywhere(id);
         if (file && file.type === 'Folder') {
-            // Check if folder actually exists in the *current* view before navigating
             const currentFolderFiles = this.getCurrentFolderFiles();
             if (currentFolderFiles.some(f => f.id === id)) {
-                 this.currentFolderPath.push(id); // Add folder ID to path
+                 this.currentFolderPath.push(id);
                  this.displayFiles();
             } else {
                  console.error("Attempted to open folder not in current view:", id);
@@ -390,18 +380,14 @@ class FileManager {
     }
 
     goBack() {
-        // If in edit mode, 'Back' should close the editor first
         if (this.editPage.classList.contains('active')) {
             this.closeEditFileModal();
         }
-        // If in file view and not at root, go up one level
         else if (this.currentFolderPath.length > 0) {
-            this.currentFolderPath.pop(); // Remove last folder ID from path
+            this.currentFolderPath.pop();
             this.displayFiles();
         } else {
-            // At root, maybe navigate to a higher level app screen if applicable
             console.log("Already at root folder.");
-            // Or optionally: alert("You are at the root folder.");
         }
     }
 
@@ -411,33 +397,25 @@ class FileManager {
             return;
         }
 
-        const file = this.findFileAnywhere(this.currentFileId); // Find file anywhere
+        const file = this.findFileAnywhere(this.currentFileId);
 
         if (file) {
-            // If visual editor is active, serialize its data back to the textarea first
             if (this.currentEditorView === 'visual') {
                 if (!this.serializeVisualEditor()) {
-                    // Serialization failed (e.g., data became invalid)
                     alert("Error serializing visual data. Please check the data or switch to Code View to fix.");
                     return;
                 }
             }
 
-            // Save the content from the textarea
             file.content = this.fileContent.value;
             this.persistFiles();
             alert('File saved successfully!');
-            // Optional: Keep the editor open after saving
-            // this.closeEditFileModal(); // Uncomment to close after save
         } else {
             alert('Error: File could not be found for saving.');
         }
     }
 
-    // --- Execution Logic ---
-
     executeFile(id) {
-        // This is called from the main file list view
         const file = this.findFileAnywhere(id);
         if (!file) {
             alert('File not found.');
@@ -445,19 +423,16 @@ class FileManager {
         }
 
         if (file.type === 'HTML') {
-            this.showExecutionModal(file.content);
+            this.showExecutionModal(file.content || '');
         } else if (file.type === 'JSON') {
-            // Usually you don't "execute" JSON, but maybe display it prettily?
-            // For now, just alert its content as before, or show in modal?
              try {
                  const prettyJSON = JSON.stringify(JSON.parse(file.content || '{}'), null, 2);
-                 this.showExecutionModal(`<pre>${prettyJSON}</pre>`); // Display formatted JSON
+                 this.showExecutionModal(`<pre style="white-space: pre-wrap; word-wrap: break-word;">${prettyJSON}</pre>`);
              } catch (e) {
-                 this.showExecutionModal(`<pre>Error parsing JSON:\n${e}\n\nContent:\n${file.content || ''}</pre>`);
+                 this.showExecutionModal(`<pre style="color: red; white-space: pre-wrap; word-wrap: break-word;">Error parsing JSON:\n${e}\n\nContent:\n${file.content || ''}</pre>`);
              }
 
         } else if (file.type === 'Folder') {
-             // Execute all JSON *content* within the folder (recursive) - keep original behavior
              const contentToExecute = this.executeAllJsonInFolder(file);
              if (contentToExecute.length > 0) {
                  alert(`Executing the following JSON content from folder "${file.name}":\n${contentToExecute.join('\n\n---\n\n')}`);
@@ -470,7 +445,6 @@ class FileManager {
     }
 
     executeFileContent() {
-        // This is called from the editor view's "Execute" button
         if (!this.currentFileId) {
             alert('Error: No file is currently being edited.');
             return;
@@ -481,15 +455,14 @@ class FileManager {
             return;
         }
 
-        let contentToExecute = this.fileContent.value; // Get current content from textarea
+        let contentToExecute = this.fileContent.value;
 
-        // If visual view is active, serialize it first to ensure latest changes are used
         if (this.currentEditorView === 'visual') {
             if (!this.serializeVisualEditor()) {
                  alert("Could not serialize visual data for execution. Please fix errors or switch to Code View.");
                  return;
             }
-             contentToExecute = this.fileContent.value; // Get the newly serialized content
+             contentToExecute = this.fileContent.value;
         }
 
 
@@ -498,16 +471,15 @@ class FileManager {
         } else if (file.type === 'JSON') {
              try {
                  const prettyJSON = JSON.stringify(JSON.parse(contentToExecute || '{}'), null, 2);
-                 this.showExecutionModal(`<pre>${prettyJSON}</pre>`);
+                 this.showExecutionModal(`<pre style="white-space: pre-wrap; word-wrap: break-word;">${prettyJSON}</pre>`);
              } catch (e) {
-                  this.showExecutionModal(`<pre>Error parsing JSON:\n${e}\n\nContent:\n${contentToExecute || ''}</pre>`);
+                  this.showExecutionModal(`<pre style="color: red; white-space: pre-wrap; word-wrap: break-word;">Error parsing JSON:\n${e}\n\nContent:\n${contentToExecute || ''}</pre>`);
              }
         } else {
             alert(`Cannot execute file type "${file.type}" from the editor.`);
         }
     }
 
-     // Recursive helper for folder execution (original functionality)
      executeAllJsonInFolder(folder) {
          let jsonContents = [];
          if (folder && folder.type === 'Folder' && Array.isArray(folder.content)) {
@@ -525,12 +497,10 @@ class FileManager {
 
     showExecutionModal(htmlContent) {
         if (this.executionModal && this.executionFrame) {
-            this.executionFrame.srcdoc = htmlContent; // Set content for the iframe
+            this.executionFrame.srcdoc = htmlContent;
             this.executionModal.style.display = 'flex';
         }
     }
-
-    // --- Editor View Toggling & Visual Editor ---
 
     toggleEditorView() {
         if (this.currentEditorView === 'code') {
@@ -541,11 +511,10 @@ class FileManager {
     }
 
     switchToCodeView() {
-        // If switching *from* visual, serialize data back to textarea first
         if (this.currentEditorView === 'visual') {
             if (!this.serializeVisualEditor()) {
                 alert("Could not serialize visual data. Please fix errors before switching view.");
-                return; // Prevent switching if serialization fails
+                return;
             }
         }
         this.codeEditorView.classList.remove('hidden');
@@ -555,9 +524,7 @@ class FileManager {
     }
 
     switchToVisualView() {
-        // Try parsing the current text area content
         try {
-            // Use the content currently in the text area, as it might have been edited
             const currentContent = this.fileContent.value || '[]';
             this.visualEditorData = JSON.parse(currentContent);
 
@@ -565,19 +532,19 @@ class FileManager {
                  throw new Error("JSON is not an array, expected array of questions for visual editor.");
             }
 
-            this.renderVisualEditor(); // Render based on parsed data
+            this.renderVisualEditor();
             this.codeEditorView.classList.add('hidden');
             this.visualEditorView.classList.remove('hidden');
             this.viewToggleBtn.textContent = 'Switch to Code View';
             this.currentEditorView = 'visual';
         } catch (e) {
             alert(`Error parsing JSON for Visual Editor: ${e.message}\nPlease correct the JSON in the Code View.`);
-            this.visualEditorData = null; // Ensure data is cleared on error
+            this.visualEditorData = null;
         }
     }
 
     renderVisualEditor() {
-        this.visualEditorContainer.innerHTML = ''; // Clear previous content
+        this.visualEditorContainer.innerHTML = '';
         if (!this.visualEditorData || !Array.isArray(this.visualEditorData)) {
             this.visualEditorContainer.innerHTML = '<p>No valid question data to display.</p>';
             return;
@@ -586,9 +553,8 @@ class FileManager {
         this.visualEditorData.forEach((question, qIndex) => {
             const questionDiv = document.createElement('div');
             questionDiv.classList.add('visual-question');
-            questionDiv.dataset.qIndex = qIndex; // Store index
+            questionDiv.dataset.qIndex = qIndex;
 
-            // Question Text (using textarea for multiline)
             questionDiv.innerHTML += `<label>Question ${qIndex + 1}:</label>`;
             const questionTextarea = document.createElement('textarea');
             questionTextarea.rows = 2;
@@ -596,8 +562,6 @@ class FileManager {
             questionTextarea.oninput = (e) => { this.visualEditorData[qIndex].question = e.target.value; };
             questionDiv.appendChild(questionTextarea);
 
-
-            // Answers section
             const answersDiv = document.createElement('div');
             answersDiv.style.marginTop = '10px';
             if (Array.isArray(question.answers)) {
@@ -607,16 +571,14 @@ class FileManager {
             }
              questionDiv.appendChild(answersDiv);
 
-             // Controls for adding answers and deleting questions
              const controlsDiv = document.createElement('div');
              controlsDiv.classList.add('visual-controls');
              controlsDiv.style.marginTop = '5px';
              controlsDiv.innerHTML = `
-                 <button class="button secondary small" onclick="fileManager.addVisualAnswer(${qIndex})">Add Answer</button>
-                 <button class="button small" onclick="fileManager.deleteVisualQuestion(${qIndex})">Delete Question</button>
+                 <button class="button secondary small" onclick="fileManager.addVisualAnswer(${qIndex})">+ Answer</button>
+                 <button class="button small" onclick="fileManager.deleteVisualQuestion(${qIndex})">Delete Q</button>
              `;
              questionDiv.appendChild(controlsDiv);
-
 
             this.visualEditorContainer.appendChild(questionDiv);
         });
@@ -625,7 +587,7 @@ class FileManager {
     createVisualAnswerElement(qIndex, aIndex, answer) {
          const answerDiv = document.createElement('div');
          answerDiv.classList.add('visual-answer');
-         answerDiv.dataset.aIndex = aIndex; // Store answer index relative to question
+         answerDiv.dataset.aIndex = aIndex;
 
          const answerText = document.createElement('input');
          answerText.type = 'text';
@@ -663,9 +625,9 @@ class FileManager {
         if (!this.visualEditorData) this.visualEditorData = [];
         this.visualEditorData.push({
             question: "New Question",
-            answers: [{ text: "Answer 1", correct: false }]
+            answers: [{ text: "Answer 1", correct: true }]
         });
-        this.renderVisualEditor(); // Re-render the entire visual editor
+        this.renderVisualEditor();
     }
 
     deleteVisualQuestion(qIndex) {
@@ -680,7 +642,7 @@ class FileManager {
              this.visualEditorData[qIndex].answers = [];
          }
          this.visualEditorData[qIndex].answers.push({ text: "New Answer", correct: false });
-         this.renderVisualEditor(); // Re-render is simplest way to update UI
+         this.renderVisualEditor();
      }
 
      deleteVisualAnswer(qIndex, aIndex) {
@@ -693,30 +655,22 @@ class FileManager {
 
     serializeVisualEditor() {
         try {
-            // Basic validation (e.g., ensure question text exists)
              if (this.visualEditorData.some(q => !q.question || q.question.trim() === '')) {
                   throw new Error("One or more questions have empty text.");
              }
-             // Ensure answers exist and have text
              if (this.visualEditorData.some(q => !Array.isArray(q.answers) || q.answers.length === 0 || q.answers.some(a => !a.text || a.text.trim() === ''))) {
                   throw new Error("Each question must have at least one answer, and all answers must have text.");
              }
-             // Ensure at least one answer is marked correct per question (optional, depending on quiz logic)
-             // if (this.visualEditorData.some(q => !q.answers.some(a => a.correct))) {
-             //     throw new Error("Each question must have at least one correct answer marked.");
-             // }
 
-            const jsonString = JSON.stringify(this.visualEditorData, null, 2); // Pretty print JSON
+            const jsonString = JSON.stringify(this.visualEditorData, null, 2);
             this.fileContent.value = jsonString;
-            return true; // Indicate success
+            return true;
         } catch (e) {
             console.error("Error serializing visual editor data:", e);
             alert(`Error saving visual data: ${e.message}`);
-            return false; // Indicate failure
+            return false;
         }
     }
-
-    // --- Other UI Helpers ---
 
     toggleFileList() {
         this.ascending = !this.ascending;
@@ -727,25 +681,20 @@ class FileManager {
         this.displayFiles();
     }
 
-    // --- Night Mode ---
-
     initNightMode() {
         const nightModeSaved = localStorage.getItem('nightMode') === 'true';
         this.applyNightMode(nightModeSaved);
         if (this.nightModeToggleFiles) this.nightModeToggleFiles.checked = nightModeSaved;
-        if (this.nightModeToggleEdit) this.nightModeToggleEdit.checked = nightModeSaved; // Sync edit toggle
+        if (this.nightModeToggleEdit) this.nightModeToggleEdit.checked = nightModeSaved;
 
-        // Add listeners
         if (this.nightModeToggleFiles) {
              this.nightModeToggleFiles.addEventListener('change', (e) => this.toggleNightMode(e.target.checked));
         }
-         // Listener for edit toggle is added in DOMContentLoaded after FileManager instance exists
     }
 
     toggleNightMode(enabled) {
         this.applyNightMode(enabled);
         localStorage.setItem('nightMode', enabled);
-        // Sync both toggles
         if (this.nightModeToggleFiles) this.nightModeToggleFiles.checked = enabled;
         if (this.nightModeToggleEdit) this.nightModeToggleEdit.checked = enabled;
     }
@@ -757,30 +706,4 @@ class FileManager {
              document.body.classList.remove('night-mode');
          }
      }
-
 }
-
-// --- Global Helper Functions ---
-// (Ensure clearLocalStorage is defined if called from HTML)
-// const clearLocalStorage = () => { ... moved inside DOMContentLoaded check in HTML ... };
-
-// --- Global Event Listeners or Initializers ---
-// Moved instantiation to DOMContentLoaded in HTML file
-// const fileManager = new FileManager();
-
-// // Make methods globally accessible IF called directly from HTML onclick (alternative is adding listeners)
-// // It's generally better to add listeners, but this matches the current pattern
-// window.showAddFileModal = fileManager.showAddFileModal.bind(fileManager);
-// window.closeAddFileModal = fileManager.closeAddFileModal.bind(fileManager);
-// window.addNewFile = fileManager.addNewFile.bind(fileManager);
-// // window.editFile = fileManager.editFile.bind(fileManager); // Replaced by openEditFileModal
-// // window.saveFile = fileManager.saveFile.bind(fileManager); // Handled by instance call
-// window.executeFile = fileManager.executeFile.bind(fileManager);
-// window.openFolder = fileManager.openFolder.bind(fileManager);
-// window.deleteFile = fileManager.deleteFile.bind(fileManager);
-// window.showRenameFileModal = fileManager.showRenameFileModal.bind(fileManager);
-// window.closeRenameFileModal = fileManager.closeRenameFileModal.bind(fileManager);
-// window.renameFile = fileManager.renameFile.bind(fileManager);
-// window.toggleFileList = fileManager.toggleFileList.bind(fileManager);
-// window.goBack = fileManager.goBack.bind(fileManager);
-// // Note: onclick handlers in HTML will now need to call fileManager.methodName() e.g., onclick="fileManager.saveFile()"

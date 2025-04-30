@@ -174,7 +174,7 @@ function submitAnswer() {
 
     if(submitButton) submitButton.disabled = true;
     if(helpButton) helpButton.style.display = 'none';
-    if(skipButton) skipButton.style.display = 'none'; // Hide skip button on submit
+    if(skipButton) skipButton.style.display = 'none';
 
     if (isCorrect) {
         recordCorrectAnswer(currentIndex, selectedAnswer);
@@ -241,11 +241,12 @@ function showAnswer() {
          if(helpButton) helpButton.style.display = 'none'; // Hide Help (?)
          if(skipButton) {
              skipButton.style.display = 'block'; // Keep Skip visible
-             skipButton.disabled = true;         // Disable Skip
+             skipButton.disabled = false;        // Keep Skip ENABLED
          }
     }
 }
 // --- End of corrected showAnswer ---
+
 
 function recordWrongAnswer(questionIndex, selectedAnswerObj, skipped = false) {
     const question = randomizedQuestions[questionIndex];

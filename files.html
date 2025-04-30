@@ -4,10 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Manager</title>
-    <!-- Link to your CSS file -->
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="files.css">
     <style>
-        /* Add styles for the visual editor (can be moved to styles.css) */
         #visualEditorContainer { border: 1px solid #ccc; padding: 10px; margin-top: 10px; border-radius: 5px; max-height: 400px; overflow-y: auto; }
         body.night-mode #visualEditorContainer { border-color: #555; }
         .visual-question { background: rgba(0,0,0,0.05); padding: 10px; margin-bottom: 10px; border-radius: 5px; }
@@ -20,10 +18,7 @@
         .visual-answer input[type="checkbox"] { margin-right: 5px; }
         .visual-controls button { margin-right: 5px; padding: 3px 8px; font-size: 0.9em;}
         #visualEditorContainer .button.small { padding: 5px 10px; font-size: 0.9em; margin-top: 10px; }
-
-        /* Style for execution modal iframe */
         #executionFrame { width: 100%; height: 400px; border: none; }
-
     </style>
 </head>
 <body>
@@ -41,7 +36,7 @@
             <div class="control-panel">
                 <button class="button secondary list-button" onclick="fileManager.toggleFileList()">List ↑</button>
                 <button class="button secondary" onclick="fileManager.showAddFileModal()">+</button>
-                <button class="button" onclick="clearLocalStorage()">Clear File Storage</button> <!-- Assuming clearLocalStorage is defined elsewhere -->
+                <button class="button" onclick="clearLocalStorage()">Clear File Storage</button>
             </div>
             <div id="filesContainer"></div>
         </div>
@@ -54,7 +49,6 @@
                 <span id="currentEditFileName" class="file-name"></span>
             </h1>
             <div class="toggle-container">
-                 <!-- Moved night mode toggle here for consistency -->
                  <input type="checkbox" id="nightModeToggleEdit" class="toggle" />
                  <label for="nightModeToggleEdit" class="toggle-label"></label>
             </div>
@@ -64,15 +58,12 @@
                  <button id="viewToggleBtn" class="button secondary" onclick="fileManager.toggleEditorView()" style="display: none;">Switch to Visual View</button>
             </div>
 
-            <!-- Code Editor View -->
             <div id="codeEditorView">
                  <textarea id="fileContent" rows="15"></textarea>
             </div>
 
-            <!-- Visual Editor View (Initially Hidden) -->
             <div id="visualEditorView" class="hidden" style="text-align: left;">
                 <div id="visualEditorContainer">
-                    <!-- Visual editor content will be generated here -->
                 </div>
                 <button class="button primary small" onclick="fileManager.addVisualQuestion()">+ Add Question</button>
             </div>
@@ -84,7 +75,6 @@
         </div>
     </div>
 
-    <!-- Add File Modal -->
     <div id="addFileModal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="fileManager.closeAddFileModal()">×</span>
@@ -93,14 +83,13 @@
             <select id="fileType">
                 <option value="JSON">JSON</option>
                 <option value="Folder">Folder</option>
-                <option value="HTML">HTML</option> <!-- Added HTML type -->
+                <option value="HTML">HTML</option>
             </select>
             <input type="text" id="fileNameInput" placeholder="Enter file name">
             <button class="button primary" onclick="fileManager.addNewFile()">Add</button>
         </div>
     </div>
 
-    <!-- Rename File Modal -->
     <div id="renameFileModal" class="modal hidden">
         <div class="modal-content">
             <span class="close" onclick="fileManager.closeRenameFileModal()">×</span>
@@ -110,7 +99,6 @@
         </div>
     </div>
 
-    <!-- Execution Modal -->
     <div id="executionModal" class="modal hidden">
         <div class="modal-content" style="width: 80%; max-width: 800px;">
             <span class="close" onclick="fileManager.closeExecutionModal()">×</span>
@@ -119,34 +107,27 @@
         </div>
     </div>
 
-    <!-- Remove the old inline script block -->
-
     <script src="files.js"></script>
     <script>
-        // Initialize FileManager after the class is defined
         document.addEventListener('DOMContentLoaded', () => {
              window.fileManager = new FileManager();
 
-             // Add listener for the edit page night mode toggle
              const nightModeToggleEdit = document.getElementById('nightModeToggleEdit');
              if (nightModeToggleEdit) {
                   nightModeToggleEdit.addEventListener('change', () => {
                       fileManager.toggleNightMode(nightModeToggleEdit.checked);
                   });
-                  // Sync edit toggle with main toggle state initially
                   const filesToggle = document.getElementById('nightModeToggleFiles');
                   if (filesToggle) {
                        nightModeToggleEdit.checked = filesToggle.checked;
                   }
              }
 
-            // Add clearLocalStorage function if not defined elsewhere
             if (typeof window.clearLocalStorage === 'undefined') {
                 window.clearLocalStorage = function() {
                     if (confirm('Are you sure you want to clear all files? This cannot be undone.')) {
                         localStorage.removeItem('files');
-                        localStorage.removeItem('nightMode'); // Optionally clear night mode too
-                        // Re-initialize or reload to reflect changes
+                        localStorage.removeItem('nightMode');
                         window.location.reload();
                     }
                 }

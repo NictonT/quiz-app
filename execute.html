@@ -5,22 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Application</title>
     <link rel="stylesheet" href="execute.css">
+    <!-- Add Poppins font if execute.css doesn't import it -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
 <body>
     <div id="quizPage" class="slide active">
+        <!-- Added Header for Toggle -->
+        <div class="header">
+            <!-- Optional Title -->
+            <!-- <h2>Quiz in Progress</h2> -->
+            <div class="toggle-container">
+                <input type="checkbox" id="nightModeToggleQuiz" class="toggle" />
+                <label for="nightModeToggleQuiz" class="toggle-label">Night Mode</label>
+            </div>
+        </div>
+        <!-- End Added Header -->
+
         <div class="progress-container">
-            <div class="file-name" id="fileNameDisplay"></div>
+            <div class="file-name" id="fileNameDisplay"></div> <!-- Optional: You might want to display the source file name here -->
             <div class="progress-bar">
                 <div class="progress-bar-fill" id="progressBarFill" style="width: 0%;"></div>
             </div>
-            <div class="question-count" id="questionCount"></div>
+            <div class="question-count" id="questionCount">0%</div> <!-- Start text at 0% -->
         </div>
 
         <div class="question-card">
             <div id="questionArea">
-                <h2 id="questionText"></h2>
+                <h2 id="questionText">Loading question...</h2> <!-- Placeholder text -->
             </div>
-            <div id="answersContainer"></div>
+            <div id="answersContainer">
+                <!-- Answers will be loaded here by JS -->
+            </div>
         </div>
 
         <div class="button-container">
@@ -31,9 +46,19 @@
     </div>
 
     <div id="resultPage" class="slide hidden">
+         <!-- Added Header for Toggle (Consistency) -->
+         <div class="header">
+            <!-- Optional Title -->
+             <h2>Quiz Results</h2>
+             <div class="toggle-container">
+                 <input type="checkbox" id="nightModeToggleResult" class="toggle" /> <!-- Different ID needed if handled separately, or reuse logic -->
+                 <label for="nightModeToggleResult" class="toggle-label">Night Mode</label> <!-- For now, keep ID unique, JS only looks for nightModeToggleQuiz -->
+             </div>
+         </div>
+         <!-- End Added Header -->
         <div class="result-content">
-            <h2>Quiz Results</h2>
-            <div id="scoreText"></div>
+            <!-- Removed h2 from here as it's in header now -->
+            <div id="scoreText">Calculating score...</div>
             <div id="scoreGraphics">
                 <div class="score-section">
                     <div class="score-label">Correct Answers</div>
@@ -50,7 +75,7 @@
         <div class="button-container">
             <button class="button primary" onclick="restartQuiz()">Restart Quiz</button>
             <button class="button secondary" onclick="redoWrongAnswers()">Redo Wrong</button>
-            <button class="button secondary" onclick="goToHomePage()">Home Page</button>
+            <button class="button secondary" onclick="goToHomePage()">Home Page</button> <!-- Changed label -->
         </div>
     </div>
 

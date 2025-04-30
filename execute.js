@@ -137,7 +137,7 @@ function loadQuestion() {
             answerElement.dataset.answerText = originalAnswerText;
 
             answerElement.innerText = `${displayKey}) ${originalAnswerText}`;
-            answerElement.onclick = () => selectAnswer(answerElement);
+            answerElement.onclick = () => selectAnswer(answerElement); // Re-enable clicking
             answersContainer.appendChild(answerElement);
         }
 
@@ -147,7 +147,7 @@ function loadQuestion() {
         const helpButton = document.querySelector('.help-button');
 
          if(submitButton) { submitButton.style.display = 'block'; submitButton.disabled = true; }
-         if(skipButton) skipButton.style.display = retryingQuestion ? 'none' : 'block';
+         if(skipButton) { skipButton.style.display = retryingQuestion ? 'none' : 'block'; skipButton.disabled = false; } // Ensure skip is enabled
          if(helpButton) helpButton.style.display = 'block';
 
         updateProgressBar();
@@ -192,7 +192,14 @@ function selectAnswer(selectedElement) {
 
      selectedAnswer = { displayKey, originalKey, answerText };
 
-     document.querySelectorAll('.answer').forEach(el => el.classList.remove('selected'));
+     document.querySelectorAll('.answer').forEach(el => {
+         el.classList.remove('selected');
+         // Reset visual feedback from potential 'showAnswer' call
+         el.classList.remove('correct', 'wrong');
+         el.style.border = '';
+         el.style.fontWeight = '';
+         el.style.opacity = '';
+     });
      selectedElement.classList.add('selected');
 
      const submitButton = document.getElementById('submitButton');
@@ -207,54 +214,51 @@ function submitAnswer() {
          alert("Error processing answer. Invalid question data."); return;
     }
 
-     const isCorrect = selectedAnswer.originalKey === currentQuestion.correctAnswer;
+    const isCorrect = selectedAnswer.originalKey === currentQuestion.correctAnswer;
 
-     document.querySelectorAll('.answer').forEach(el => {
-        el.classList.remove('correct', 'wrong');
-        el.style.border = '';
-        el.style.fontWeight = '';
-        el.style.opacity = '';
-        el.onclick = () => selectAnswer(el);
-     });
+    // Disable interactions immediately
+    document.querySelectorAll('.answer').forEach(el => el.onclick = null);
+    const submitButton = document.getElementById('submitButton');
+    const helpButton = document.querySelector('.help-button');
+    // Skip button hiding moved to setTimeout
 
-     if (isCorrect) {
-         recordCorrectAnswer(currentIndex, selectedAnswer);
-         removeFromWrongAnswers(currentQuestion.question);
-         const correctElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === selectedAnswer.originalKey);
-         if(correctElement) correctElement.classList.add('correct');
+    if(submitButton) submitButton.disabled = true;
+    if(helpButton) helpButton.style.display = 'none';
 
-     } else {
-         recordWrongAnswer(currentIndex, selectedAnswer, false);
-         const selectedElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === selectedAnswer.originalKey);
-         const correctElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === currentQuestion.correctAnswer);
-         if(selectedElement) selectedElement.classList.add('wrong');
-         if(correctElement) correctElement.classList.add('correct');
-     }
+    // Apply visual feedback (correct/wrong highlighting)
+    if (isCorrect) {
+        recordCorrectAnswer(currentIndex, selectedAnswer);
+        removeFromWrongAnswers(currentQuestion.question);
+        const correctElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === selectedAnswer.originalKey);
+        if(correctElement) correctElement.classList.add('correct');
+    } else {
+        recordWrongAnswer(currentIndex, selectedAnswer, false);
+        const selectedElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === selectedAnswer.originalKey);
+        const correctElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === currentQuestion.correctAnswer);
+        if(selectedElement) selectedElement.classList.add('wrong');
+        if(correctElement) correctElement.classList.add('correct');
+    }
 
-     document.querySelectorAll('.answer').forEach(el => el.onclick = null);
-     const submitButton = document.getElementById('submitButton');
-     const helpButton = document.querySelector('.help-button');
-     const skipButton = document.getElementById('skipButton');
-     if (submitButton) submitButton.disabled = true;
-     if (helpButton) helpButton.style.display = 'none';
-     if (skipButton) skipButton.style.display = 'none';
+    // Delay state change and UI reset for next question/results
+    setTimeout(() => {
+        const skipButton = document.getElementById('skipButton'); // Find skip button again inside timeout
+        if (skipButton) skipButton.style.display = 'none'; // Now hide skip button
 
-     setTimeout(() => {
-         if (!retryingQuestion) {
-             completedQuestions++;
-         }
+        if (!retryingQuestion) {
+            completedQuestions++;
+        }
 
-         if (retryingQuestion) {
-             retryingQuestion = false;
-             retryIndex = -1;
-             showResults();
-         } else {
-             currentIndex++;
-             loadQuestion();
-         }
-         updateProgressBar();
-     }, 1500);
- }
+        if (retryingQuestion) {
+            retryingQuestion = false;
+            retryIndex = -1;
+            showResults();
+        } else {
+            currentIndex++;
+            loadQuestion();
+        }
+        updateProgressBar();
+    }, 1500); // 1.5 second delay for feedback
+}
 
 function skipQuestion() {
     if (retryingQuestion) return;
@@ -282,7 +286,7 @@ function showAnswer() {
             } else {
                  el.style.opacity = '0.6';
             }
-            el.onclick = null;
+            el.onclick = null; // Disable clicking answers
         });
 
          const submitButton = document.getElementById('submitButton');
@@ -291,7 +295,11 @@ function showAnswer() {
 
          if(submitButton) submitButton.style.display = 'none';
          if(helpButton) helpButton.style.display = 'none';
-         if(skipButton) skipButton.style.display = 'block';
+         // Keep skip button visible but disable it
+         if(skipButton) {
+            skipButton.style.display = 'block';
+            skipButton.disabled = true; // Disable skip after showing answer
+         }
     }
 }
 

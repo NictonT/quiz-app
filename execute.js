@@ -4,7 +4,7 @@ let currentIndex = 0;
 let correctCount = 0;
 let wrongCount = 0;
 let skippedQuestions = [];
-let selectedAnswer = '';
+let selectedAnswer = null;
 let wrongAnswers = [];
 let correctAnswers = [];
 let retryingQuestion = false;
@@ -13,30 +13,69 @@ let totalQuestions = 0;
 let completedQuestions = 0;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const storedData = localStorage.getItem('quizData');
+    const storedData = localStorage.getItem('quizDataToExecute');
+
     if (storedData) {
         try {
             questions = JSON.parse(storedData);
-            if (!Array.isArray(questions)) questions = [questions];
-            randomizedQuestions = shuffleArray(questions);
-            totalQuestions = randomizedQuestions.length;
-            loadQuestion();
+            localStorage.removeItem('quizDataToExecute');
+
+            if (!Array.isArray(questions)) {
+                if (questions && typeof questions === 'object' && questions.question && questions.answers && questions.correctAnswer) {
+                     questions = [questions];
+                } else {
+                    console.error('Error: Stored quiz data is not a valid array or single question object.', questions);
+                    questions = [];
+                    alert("Error: Could not load valid quiz questions.");
+                }
+            } else {
+                 const originalLength = questions.length;
+                 questions = questions.filter(q => q && typeof q === 'object' && q.question && q.answers && typeof q.answers === 'object' && q.correctAnswer);
+                 if (questions.length !== originalLength) {
+                      console.warn(`execute.js: Filtered out ${originalLength - questions.length} invalid question objects.`);
+                 }
+            }
+
+            if (questions.length > 0) {
+                randomizedQuestions = shuffleArray(questions);
+                totalQuestions = randomizedQuestions.length;
+                completedQuestions = 0;
+                loadQuestion();
+                showSlide('quizPage');
+            } else {
+                 console.error("execute.js: No valid questions found after parsing/filtering.");
+                 alert("No valid questions found to start the quiz.");
+                 goToHomePage();
+            }
+
         } catch (e) {
-            console.error('Error parsing stored data:', e);
+            console.error('Error parsing stored quiz data:', e);
+            alert(`Error loading quiz questions: ${e.message}\nPlease check the JSON format.`);
+             localStorage.removeItem('quizDataToExecute');
+             goToHomePage();
         }
+    } else {
+        console.warn("execute.js: No 'quizDataToExecute' found in localStorage.");
+        alert("No quiz data found. Please select a quiz file or folder to execute.");
+        goToHomePage();
     }
     updateNightMode();
 });
 
 function updateNightMode() {
-    const nightModeToggle = document.getElementById('nightModeToggle');
-    if (localStorage.getItem('nightMode') === 'true') {
-        document.body.classList.add('night-mode');
-        nightModeToggle.checked = true;
+    const nightModeToggle = document.getElementById('nightModeToggleQuiz');
+    if (!nightModeToggle) {
+        console.warn("Night mode toggle not found in execute.html");
+        return;
     }
+    const nightModeActive = localStorage.getItem('nightMode') === 'true';
+    document.body.classList.toggle('night-mode', nightModeActive);
+    nightModeToggle.checked = nightModeActive;
+
     nightModeToggle.addEventListener('change', function () {
-        document.body.classList.toggle('night-mode', this.checked);
-        localStorage.setItem('nightMode', this.checked);
+        const isEnabled = this.checked;
+        document.body.classList.toggle('night-mode', isEnabled);
+        localStorage.setItem('nightMode', String(isEnabled));
     });
 }
 
@@ -47,9 +86,13 @@ function showSlide(slideId) {
         slide.classList.remove("active");
     });
 
-    const slide = document.getElementById(slideId);
-    slide.classList.remove("hidden");
-    slide.classList.add("active");
+    const slideToShow = document.getElementById(slideId);
+    if (slideToShow) {
+        slideToShow.classList.remove("hidden");
+        slideToShow.classList.add("active");
+    } else {
+         console.error(`execute.js: Slide with ID "${slideId}" not found.`);
+    }
 }
 
 function loadQuestion() {
@@ -57,23 +100,55 @@ function loadQuestion() {
         currentIndex = retryIndex;
     }
 
-    if (currentIndex < randomizedQuestions.length) {
+    if (currentIndex >= 0 && currentIndex < randomizedQuestions.length) {
         const question = randomizedQuestions[currentIndex];
-        document.getElementById('questionText').innerText = question.question;
+
+         if (!question || !question.question || !question.answers || typeof question.answers !== 'object') {
+              console.error(`Invalid question structure at index ${currentIndex}:`, question);
+              alert(`Error: Invalid question data encountered at question ${currentIndex + 1}. Skipping.`);
+              currentIndex++;
+              completedQuestions++;
+              loadQuestion();
+              return;
+         }
+
+        const questionTextEl = document.getElementById('questionText');
+        if(questionTextEl) questionTextEl.innerText = question.question;
+
         const answersContainer = document.getElementById('answersContainer');
+        if (!answersContainer) {
+             console.error("Answers container not found!");
+             return;
+        }
         answersContainer.innerHTML = '';
-        const shuffledAnswers = shuffleAnswers(question.answers);
-        for (let key in shuffledAnswers) {
+
+        const shuffledDisplayAnswers = shuffleAnswers(question.answers);
+
+        for (let displayKey in shuffledDisplayAnswers) {
+            const originalAnswerText = shuffledDisplayAnswers[displayKey];
             let answerElement = document.createElement('div');
             answerElement.classList.add('answer');
-            answerElement.innerText = `${key}: ${shuffledAnswers[key]}`;
-            answerElement.onclick = () => selectAnswer(key, shuffledAnswers[key]);
+            answerElement.dataset.originalKey = Object.keys(question.answers).find(key => question.answers[key] === originalAnswerText);
+            answerElement.dataset.displayKey = displayKey;
+            answerElement.dataset.answerText = originalAnswerText;
+
+            answerElement.innerText = `${displayKey}) ${originalAnswerText}`;
+            answerElement.onclick = () => selectAnswer(answerElement);
             answersContainer.appendChild(answerElement);
         }
-        document.querySelector('.help-button').style.display = 'block';
-        document.getElementById('submitButton').style.display = 'block';
-        document.getElementById('submitButton').disabled = true;
-        document.getElementById('skipButton').style.display = retryingQuestion ? 'none' : 'block';
+
+        selectedAnswer = null;
+        const submitButton = document.getElementById('submitButton');
+        const skipButton = document.getElementById('skipButton');
+        const helpButton = document.querySelector('.help-button');
+
+         if(submitButton) {
+             submitButton.style.display = 'block';
+             submitButton.disabled = true;
+         }
+         if(skipButton) skipButton.style.display = retryingQuestion ? 'none' : 'block';
+         if(helpButton) helpButton.style.display = 'block';
+
         updateProgressBar();
     } else {
         showResults();
@@ -81,7 +156,8 @@ function loadQuestion() {
 }
 
 function shuffleArray(array) {
-    let shuffled = array.slice();
+    if (!Array.isArray(array)) return [];
+    let shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
@@ -89,60 +165,88 @@ function shuffleArray(array) {
     return shuffled;
 }
 
-function shuffleAnswers(answers) {
-    const keys = Object.keys(answers);
-    const shuffledKeys = shuffleArray(keys);
-    let shuffledAnswers = {};
-    shuffledKeys.forEach((key, index) => {
-        shuffledAnswers[String.fromCharCode(65 + index)] = answers[key];
+function shuffleAnswers(answersObject) {
+    if (!answersObject || typeof answersObject !== 'object') return {};
+    const originalKeys = Object.keys(answersObject);
+    const shuffledKeys = shuffleArray(originalKeys);
+    let shuffledDisplayAnswers = {};
+    shuffledKeys.forEach((originalKey, index) => {
+        const displayKey = String.fromCharCode(65 + index);
+        shuffledDisplayAnswers[displayKey] = answersObject[originalKey];
     });
-    return shuffledAnswers;
+    return shuffledDisplayAnswers;
 }
 
-function selectAnswer(key, answer) {
-    selectedAnswer = { key, answer };
-    document.querySelectorAll('.answer').forEach(el => {
-        el.classList.remove('selected');
-        if (el.innerText.startsWith(key)) {
-            el.classList.add('selected');
-        }
-    });
-    document.getElementById('submitButton').disabled = false;
-}
+function selectAnswer(selectedElement) {
+     if (!selectedElement) return;
+
+     const displayKey = selectedElement.dataset.displayKey;
+     const originalKey = selectedElement.dataset.originalKey;
+     const answerText = selectedElement.dataset.answerText;
+
+     selectedAnswer = {
+         displayKey: displayKey,
+         originalKey: originalKey,
+         answerText: answerText
+     };
+
+     document.querySelectorAll('.answer').forEach(el => el.classList.remove('selected'));
+     selectedElement.classList.add('selected');
+
+     const submitButton = document.getElementById('submitButton');
+     if (submitButton) submitButton.disabled = false;
+ }
 
 function submitAnswer() {
-    if (selectedAnswer) {
-        const currentQuestion = randomizedQuestions[currentIndex];
-        if (selectedAnswer.answer === currentQuestion.answers[currentQuestion.correctAnswer]) {
-            correctCount++;
-            recordCorrectAnswer(currentIndex, selectedAnswer);
-            removeFromWrongAnswers(currentQuestion.question);
-        } else {
-            wrongCount++;
-            recordWrongAnswer(currentIndex, selectedAnswer);
-        }
-        if (completedQuestions < totalQuestions) {
-            completedQuestions++;
-        }
-        if (retryingQuestion) {
-            showResults();
-            retryingQuestion = false;
-        } else {
-            currentIndex++;
-            loadQuestion();
-        }
-        updateProgressBar();
-    } else {
-        alert('Please select an answer');
+    if (!selectedAnswer) {
+        alert('Please select an answer first.');
+        return;
     }
-}
+
+    const currentQuestion = randomizedQuestions[currentIndex];
+    if (!currentQuestion || !currentQuestion.answers || !currentQuestion.correctAnswer) {
+         console.error("Cannot submit, invalid current question data:", currentQuestion);
+         alert("Error processing answer. Invalid question data.");
+         return;
+    }
+
+     const isCorrect = selectedAnswer.originalKey === currentQuestion.correctAnswer;
+
+     if (isCorrect) {
+         recordCorrectAnswer(currentIndex, selectedAnswer);
+         removeFromWrongAnswers(currentQuestion.question);
+     } else {
+         recordWrongAnswer(currentIndex, selectedAnswer, false);
+     }
+
+     if (!retryingQuestion) {
+         completedQuestions++;
+     }
+
+     if (retryingQuestion) {
+         retryingQuestion = false;
+         retryIndex = -1;
+         showResults();
+     } else {
+         currentIndex++;
+         loadQuestion();
+     }
+
+     updateProgressBar();
+ }
 
 function skipQuestion() {
-    wrongCount++;
+    if (retryingQuestion) return;
+
+     const currentQuestion = randomizedQuestions[currentIndex];
+     if (!currentQuestion) {
+          console.error("Cannot skip, invalid current question data.");
+          return;
+     }
+
     recordWrongAnswer(currentIndex, null, true);
-    if (completedQuestions < totalQuestions) {
-        completedQuestions++;
-    }
+
+    completedQuestions++;
     currentIndex++;
     updateProgressBar();
     loadQuestion();
@@ -151,158 +255,215 @@ function skipQuestion() {
 function showAnswer() {
     if (currentIndex < randomizedQuestions.length) {
         const question = randomizedQuestions[currentIndex];
-        const correctAnswer = question.answers[question.correctAnswer];
+         if (!question || !question.answers || !question.correctAnswer) {
+             console.error("Cannot show answer, invalid question data:", question);
+             return;
+         }
+        const correctAnswerKey = question.correctAnswer;
+
         document.querySelectorAll('.answer').forEach(el => {
-            if (el.innerText.includes(correctAnswer)) {
+            if (el.dataset.originalKey === correctAnswerKey) {
                 el.classList.add('correct');
-                el.style.backgroundColor = 'green';
+                el.style.border = '2px solid green';
+                el.style.fontWeight = 'bold';
+            } else {
+                 el.style.opacity = '0.6';
             }
+             el.onclick = null;
         });
-        document.getElementById('submitButton').style.display = 'none';
-        document.querySelector('.help-button').style.display = 'none';
-        document.getElementById('skipButton').style.display = 'block';
+
+         const submitButton = document.getElementById('submitButton');
+         const helpButton = document.querySelector('.help-button');
+         const skipButton = document.getElementById('skipButton');
+
+         if(submitButton) submitButton.style.display = 'none';
+         if(helpButton) helpButton.style.display = 'none';
+         if(skipButton) skipButton.style.display = 'block';
     }
 }
 
-function recordWrongAnswer(index, selectedAnswer, skipped = false) {
-    const question = randomizedQuestions[index];
-    const existingWrong = wrongAnswers.findIndex(q => q.question === question.question);
-    if (existingWrong !== -1) {
-        wrongAnswers.splice(existingWrong, 1);
+function recordWrongAnswer(questionIndex, selectedAnswerObj, skipped = false) {
+    const question = randomizedQuestions[questionIndex];
+    if (!question) return;
+
+    const existingWrongIndex = wrongAnswers.findIndex(q => q.question === question.question);
+    if (existingWrongIndex !== -1) {
+        wrongAnswers.splice(existingWrongIndex, 1);
     }
+
     wrongAnswers.push({
         question: question.question,
-        selected: selectedAnswer ? selectedAnswer.answer : null,
+        selected: selectedAnswerObj ? selectedAnswerObj.answerText : null,
         correct: question.answers[question.correctAnswer],
         skipped: skipped
     });
 }
 
-function recordCorrectAnswer(index, selectedAnswer) {
-    const question = randomizedQuestions[index];
-    const existingCorrect = correctAnswers.findIndex(q => q.question === question.question);
-    if (existingCorrect !== -1) {
-        correctAnswers.splice(existingCorrect, 1);
+function recordCorrectAnswer(questionIndex, selectedAnswerObj) {
+    const question = randomizedQuestions[questionIndex];
+     if (!question) return;
+
+    const existingCorrectIndex = correctAnswers.findIndex(q => q.question === question.question);
+    if (existingCorrectIndex !== -1) {
+        correctAnswers.splice(existingCorrectIndex, 1);
     }
+
     correctAnswers.push({
         question: question.question,
-        correct: question.answers[question.correctAnswer]
+        correct: selectedAnswerObj.answerText
     });
 }
 
-function removeFromWrongAnswers(question) {
-    const index = wrongAnswers.findIndex(item => item.question === question);
+function removeFromWrongAnswers(questionText) {
+    const index = wrongAnswers.findIndex(item => item.question === questionText);
     if (index !== -1) {
         wrongAnswers.splice(index, 1);
-        wrongCount--;
     }
 }
 
 function showResults() {
     showSlide('resultPage');
+
     const correctList = document.getElementById('correctList');
     const wrongList = document.getElementById('wrongList');
+    const scoreTextEl = document.getElementById('scoreText');
+    const correctChartEl = document.getElementById('correctPercentage');
+    const wrongChartEl = document.getElementById('wrongPercentage');
+
+    if (!correctList || !wrongList || !scoreTextEl || !correctChartEl || !wrongChartEl) {
+        console.error("One or more results page elements are missing!");
+        return;
+    }
+
     correctList.innerHTML = '';
     wrongList.innerHTML = '';
-    
+    correctList.classList.add('hidden');
+    wrongList.classList.add('hidden');
+
     correctAnswers.forEach(item => {
         const listItem = document.createElement('li');
-        listItem.innerHTML = `<div class="indicator correct"></div> ${item.question}`;
-        listItem.onclick = () => retryQuestion(item.question, 'correct');
+        listItem.innerHTML = `<div class="indicator correct"></div> ${item.question} <br><i><small>(Correct: ${item.correct})</small></i>`;
+        listItem.onclick = () => retryQuestion(item.question);
         correctList.appendChild(listItem);
     });
-    
+
     wrongAnswers.forEach(item => {
         const listItem = document.createElement('li');
         const indicatorClass = item.skipped ? 'skipped' : 'wrong';
-        listItem.innerHTML = `<div class="indicator ${indicatorClass}"></div> ${item.question}`;
-        listItem.onclick = () => retryQuestion(item.question, indicatorClass);
+         let details = item.skipped ? '<i>(Skipped)</i>' : `<i><small>(Selected: ${item.selected || 'None'}, Correct: ${item.correct})</small></i>`;
+        listItem.innerHTML = `<div class="indicator ${indicatorClass}"></div> ${item.question} <br>${details}`;
+        listItem.onclick = () => retryQuestion(item.question);
         wrongList.appendChild(listItem);
     });
 
-    correctCount = correctAnswers.length;
-    wrongCount = wrongAnswers.length;
-    totalQuestions = correctCount + wrongCount;
+    const finalCorrectCount = correctAnswers.length;
+    const finalWrongCount = wrongAnswers.length;
+    const finalTotalAttempted = finalCorrectCount + finalWrongCount;
 
-    const correctPercentage = Math.round((correctCount / totalQuestions) * 100);
-    const wrongPercentage = Math.round((wrongCount / totalQuestions) * 100);
+    let correctPercentage = 0;
+    let wrongPercentage = 0;
 
-    document.getElementById('correctPercentage').style.setProperty('--percentage', `${correctPercentage}%`);
-    document.getElementById('wrongPercentage').style.setProperty('--percentage', `${wrongPercentage}%`);
+    if (finalTotalAttempted > 0) {
+        correctPercentage = Math.round((finalCorrectCount / finalTotalAttempted) * 100);
+        wrongPercentage = 100 - correctPercentage;
+    }
 
-    document.getElementById('correctPercentage').setAttribute('data-count', correctCount);
-    document.getElementById('wrongPercentage').setAttribute('data-count', wrongCount);
+    scoreTextEl.innerText = `Score: ${correctPercentage}% (${finalCorrectCount}/${finalTotalAttempted})`;
 
-    document.getElementById('scoreText').innerText = `Score: ${correctPercentage}%`;
+    correctChartEl.style.setProperty('--percentage', `${correctPercentage}%`);
+    wrongChartEl.style.setProperty('--percentage', `${wrongPercentage}%`);
 
-    document.getElementById('correctPercentage').onclick = toggleCorrectList;
-    document.getElementById('wrongPercentage').onclick = toggleWrongList;
+    correctChartEl.setAttribute('data-count', finalCorrectCount);
+    wrongChartEl.setAttribute('data-count', finalWrongCount);
+
+     correctChartEl.onclick = null;
+     correctChartEl.onclick = toggleCorrectList;
+     wrongChartEl.onclick = null;
+     wrongChartEl.onclick = toggleWrongList;
 }
 
 function updateProgressBar() {
     const progressBarFill = document.getElementById('progressBarFill');
-    const progressPercentage = Math.min(Math.round((completedQuestions / totalQuestions) * 100), 100);
+    const questionCountEl = document.getElementById('questionCount');
+
+    if (!progressBarFill || !questionCountEl) return;
+
+    let progressPercentage = 0;
+    if (totalQuestions > 0) {
+        const currentCompleted = Math.min(completedQuestions, totalQuestions);
+        progressPercentage = Math.round((currentCompleted / totalQuestions) * 100);
+    }
+
     progressBarFill.style.width = `${progressPercentage}%`;
-    document.getElementById('questionCount').innerText = `${progressPercentage}%`;
+    questionCountEl.innerText = `${progressPercentage}%`;
 }
 
-function retryQuestion(questionText, type) {
-    retryingQuestion = true;
-    retryIndex = randomizedQuestions.findIndex(q => q.question === questionText);
+function retryQuestion(questionText) {
+    const originalIndex = randomizedQuestions.findIndex(q => q.question === questionText);
 
-    if (retryIndex !== -1) {
-        showSlide('quizPage');
-        currentIndex = retryIndex;
-        loadQuestion();
-        
-        document.getElementById('skipButton').style.display = 'none';
-        document.getElementById('submitButton').style.display = 'block';
-        document.querySelector('.help-button').style.display = 'block';
+    if (originalIndex !== -1) {
+         retryingQuestion = true;
+         retryIndex = originalIndex;
+         completedQuestions = originalIndex;
+         showSlide('quizPage');
+         loadQuestion();
+    } else {
+        console.error(`Could not find question "${questionText}" to retry.`);
+        alert("Error: Could not find the selected question to retry.");
     }
 }
 
 function toggleCorrectList() {
     const correctList = document.getElementById('correctList');
-    correctList.classList.toggle('hidden');
-    updateDataCount('correctPercentage', correctList);
+    if (correctList) {
+        correctList.classList.toggle('hidden');
+    }
 }
 
 function toggleWrongList() {
     const wrongList = document.getElementById('wrongList');
-    wrongList.classList.toggle('hidden');
-    updateDataCount('wrongPercentage', wrongList);
-}
-
-function updateDataCount(elementId, listElement) {
-    const element = document.getElementById(elementId);
-    const visibleCount = listElement.classList.contains('hidden') ? 0 : listElement.children.length;
-    element.setAttribute('data-count', visibleCount);
+     if (wrongList) {
+        wrongList.classList.toggle('hidden');
+    }
 }
 
 function redoWrongAnswers() {
-    randomizedQuestions = shuffleArray(wrongAnswers.map(item => {
+    if (wrongAnswers.length === 0) {
+        alert("No wrong answers to redo!");
+        return;
+    }
+    const questionsToRedo = wrongAnswers.map(item => {
         return questions.find(q => q.question === item.question);
-    }));
-    resetQuizState();
-    loadQuestion();
+    }).filter(q => q !== undefined);
+
+    if (questionsToRedo.length > 0) {
+        randomizedQuestions = shuffleArray(questionsToRedo);
+        resetQuizStateForNewRound();
+        loadQuestion();
+    } else {
+        alert("Error finding questions to redo.");
+    }
 }
 
 function restartQuiz() {
-    randomizedQuestions = shuffleArray(questions.slice());
-    resetQuizState();
+    if (questions.length === 0) {
+         alert("No questions loaded to restart.");
+         return;
+    }
+    randomizedQuestions = shuffleArray([...questions]);
+    resetQuizStateForNewRound();
     loadQuestion();
 }
 
-function resetQuizState() {
+function resetQuizStateForNewRound() {
     currentIndex = 0;
     correctCount = 0;
     wrongCount = 0;
-    skippedQuestions = [];
-    selectedAnswer = '';
-    wrongAnswers = [];
-    correctAnswers = [];
+    selectedAnswer = null;
+
     completedQuestions = 0;
     totalQuestions = randomizedQuestions.length;
+
     showSlide('quizPage');
     updateProgressBar();
 }

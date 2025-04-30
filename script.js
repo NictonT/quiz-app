@@ -34,13 +34,18 @@ function executeQuizFromInput() {
         alert("Error: Text area element not found.");
         return;
     }
-    const jsonInput = jsonInputTextArea.value.trim(); // Trim whitespace
 
+    // 1. Get the value and trim whitespace
+    const jsonInput = jsonInputTextArea.value.trim();
+
+    // 2. Check if the trimmed value is empty
     if (!jsonInput) {
-        alert("Please enter JSON data for the quiz.");
-        return;
+        // If it's empty, show the specific alert and stop the function
+        alert("You didn't type anything! Please enter JSON data into the text area.");
+        return; // Exit the function
     }
 
+    // 3. If it's not empty, proceed with parsing and validation
     let parsedData;
     let quizDataArray;
 
@@ -49,26 +54,21 @@ function executeQuizFromInput() {
 
         // Validate and ensure it's an array
         if (isValidQuizQuestionFormat(parsedData)) {
-            // It's a single valid question object, wrap it in an array
-            quizDataArray = [parsedData];
+            quizDataArray = [parsedData]; // Wrap single object
             console.log("Input is a single valid question object. Wrapping in array.");
         } else if (Array.isArray(parsedData)) {
-            // It's an array, check if all elements are valid
             if (parsedData.length > 0 && !parsedData.every(isValidQuizQuestionFormat)) {
-                 // Find first invalid item for better error message (optional)
-                 const firstInvalid = parsedData.find(item => !isValidQuizQuestionFormat(item));
+                const firstInvalid = parsedData.find(item => !isValidQuizQuestionFormat(item));
                 console.error("Invalid item found in array:", firstInvalid);
                 throw new Error("One or more objects in the JSON array do not match the required quiz format (question, answers object, correctAnswer).");
             }
-            // It's a valid array (or an empty one)
-             quizDataArray = parsedData;
-             console.log("Input is an array. Validating elements.");
+            quizDataArray = parsedData; // It's a valid array
+            console.log("Input is an array. Validating elements.");
         } else {
-            // It's valid JSON, but not the correct structure
             throw new Error("The entered JSON is not a valid quiz question object or an array of question objects.");
         }
 
-        // If we got here, quizDataArray is a valid array (possibly empty)
+        // Check if the resulting array is empty (e.g., user entered `[]`)
         if (quizDataArray.length === 0) {
              alert("The JSON represents an empty quiz. Nothing to execute.");
              return;
@@ -83,6 +83,7 @@ function executeQuizFromInput() {
 
     } catch (e) {
         console.error("Error processing JSON input:", e);
+        // Keep the more specific JSON error alert
         alert(`Invalid JSON or incorrect format:\n${e.message}\nPlease check the structure.`);
     }
 }

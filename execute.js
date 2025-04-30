@@ -165,16 +165,16 @@ function submitAnswer() {
     const isCorrect = selectedAnswer.originalKey === currentQuestion.correctAnswer;
 
     document.querySelectorAll('.answer').forEach(el => {
-        el.onclick = null; // Disable clicking immediately
-        el.classList.remove('correct', 'wrong'); // Clear previous feedback first
+        el.onclick = null;
+        el.classList.remove('correct', 'wrong');
     });
     const submitButton = document.getElementById('submitButton');
     const helpButton = document.querySelector('.help-button');
-    const skipButton = document.getElementById('skipButton'); // Find skip button
+    const skipButton = document.getElementById('skipButton');
 
     if(submitButton) submitButton.disabled = true;
     if(helpButton) helpButton.style.display = 'none';
-    if(skipButton) skipButton.style.display = 'none'; // Hide skip button immediately
+    if(skipButton) skipButton.style.display = 'none'; // Hide skip button on submit
 
     if (isCorrect) {
         recordCorrectAnswer(currentIndex, selectedAnswer);
@@ -189,7 +189,6 @@ function submitAnswer() {
         if(correctElement) correctElement.classList.add('correct');
     }
 
-    // REMOVED setTimeout - Proceed immediately
     if (!retryingQuestion) {
         completedQuestions++;
     }
@@ -204,7 +203,6 @@ function submitAnswer() {
     updateProgressBar();
 }
 
-
 function skipQuestion() {
     if (retryingQuestion) return;
      const currentQuestion = randomizedQuestions[currentIndex];
@@ -216,6 +214,7 @@ function skipQuestion() {
     loadQuestion();
 }
 
+// --- CORRECTED showAnswer Function ---
 function showAnswer() {
     if (currentIndex >= 0 && currentIndex < randomizedQuestions.length) {
         const question = randomizedQuestions[currentIndex];
@@ -231,21 +230,22 @@ function showAnswer() {
             } else {
                  el.style.opacity = '0.6';
             }
-            el.onclick = null;
+            el.onclick = null; // Disable clicking answers
         });
 
          const submitButton = document.getElementById('submitButton');
          const helpButton = document.querySelector('.help-button');
          const skipButton = document.getElementById('skipButton');
 
-         if(submitButton) submitButton.style.display = 'none';
-         if(helpButton) helpButton.style.display = 'none';
+         if(submitButton) submitButton.style.display = 'none'; // Hide Submit
+         if(helpButton) helpButton.style.display = 'none'; // Hide Help (?)
          if(skipButton) {
-             skipButton.style.display = 'none'; // Hide skip button too after showing answer
-             // skipButton.disabled = true; // Alternatively, just disable it
+             skipButton.style.display = 'block'; // Keep Skip visible
+             skipButton.disabled = true;         // Disable Skip
          }
     }
 }
+// --- End of corrected showAnswer ---
 
 function recordWrongAnswer(questionIndex, selectedAnswerObj, skipped = false) {
     const question = randomizedQuestions[questionIndex];

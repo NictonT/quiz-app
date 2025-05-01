@@ -1,3 +1,6 @@
+/* Combined and De-duplicated CSS Rules */
+
+/* Base Variables and Styles (Likely from last :root, body definitions) */
 :root {
     --primary-color: #00BCD4;  /* Cyan */
     --secondary-color: #FF9800; /* Orange */
@@ -13,6 +16,7 @@ body.night-mode {
     --background-color: #1c1c1c; /* Dark Background */
     --text-color: #E0E0E0; /* Light Text */
     --box-shadow: 0px 2px 4px rgba(255, 255, 255, 0.1);
+    /* Night mode rules for specific elements potentially overwritten below */
 }
 
 body {
@@ -28,6 +32,7 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* Headings and General Elements */
 h1, h2 {
     font-weight: 600;
     margin: 0;
@@ -42,11 +47,25 @@ h2 {
     font-size: 1.5em;
 }
 
-.hidden {
+h4 { /* From Block 1 */
+    font-size: 1.1em;
+    margin-top: 25px;
+    margin-bottom: 10px;
+    color: var(--text-color);
+    font-weight: 600;
+    text-align: left;
+}
+
+.container { /* From Block 2 */
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.hidden { /* From Block 4 - Note: Block 1 had !important */
     display: none;
 }
 
-.slide {
+/* Slide Structure and Appearance */
+.slide { /* From Block 4 (latest simple .slide definition) */
     background-color: #fff; /* White slide background */
     border-radius: 15px;
     padding: 40px;
@@ -61,23 +80,73 @@ h2 {
     overflow: hidden; /* To hide overflowing graphics */
 }
 
-body.night-mode .slide {
+body.night-mode .slide { /* From Block 4 */
     background-color: #2c2c2c; /* Darker background for slides */
 }
 
-.header {
+.slide.hidden { /* From Block 2 */
+    transform: translateX(-100%);
+    position: absolute; /* Prevent layout shifts when hidden */
+    width: 100%;
+}
+
+.slide.active { /* From Block 2 */
+    transform: translateX(0);
+    position: relative; /* Reset position when active */
+}
+
+.slide::before { /* From Block 4 */
+    content: "";
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background-color: var(--secondary-color);
+    opacity: 0.15;
+    border-radius: 50%;
+    z-index: -1;
+    /* pointer-events: none; from Block 1 was overwritten by lack in Block 4 */
+}
+
+.slide::after { /* From Block 4 */
+    content: "";
+    position: absolute;
+    bottom: -50px;
+    right: -50px;
+    width: 150px;
+    height: 150px;
+    background-color: var(--primary-color);
+    opacity: 0.15;
+    transform: rotate(45deg);
+    z-index: -1;
+     /* pointer-events: none; from Block 1 was overwritten by lack in Block 4 */
+}
+
+body.night-mode .slide::before { /* From Block 4 */
+    background-color: var(--secondary-color);
+}
+
+body.night-mode .slide::after { /* From Block 4 */
+    background-color: var(--primary-color);
+}
+
+
+/* Header, Toggle, Buttons */
+.header { /* From Block 4 */
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
+    gap: 15px; /* From Block 1, persisted if not overwritten */
 }
 
-.toggle-container {
+.toggle-container { /* From Block 4 */
     display: flex;
     align-items: center;
 }
 
-.toggle {
+.toggle { /* From Block 4 */
     appearance: none;
     -webkit-appearance: none;
     width: 40px;
@@ -90,11 +159,11 @@ body.night-mode .slide {
     transition: background 0.3s ease;
 }
 
-.toggle:checked {
+.toggle:checked { /* From Block 4 */
     background: var(--primary-color);
 }
 
-.toggle:before {
+.toggle:before { /* From Block 4 */
     content: "";
     position: absolute;
     top: 2px;
@@ -106,16 +175,16 @@ body.night-mode .slide {
     transition: transform 0.3s ease;
 }
 
-.toggle:checked:before {
+.toggle:checked:before { /* From Block 4 */
     transform: translateX(20px);
 }
 
-.toggle-label {
+.toggle-label { /* From Block 4 */
     margin-left: 10px;
     font-size: 14px;
 }
 
-textarea {
+textarea { /* From Block 4 */
     width: calc(100% - 22px);
     padding: 15px;
     margin-bottom: 20px;
@@ -128,12 +197,12 @@ textarea {
     box-shadow: var(--box-shadow);
 }
 
-body.night-mode textarea {
+body.night-mode textarea { /* From Block 4 */
     background-color: rgba(50, 50, 50, 0.8); /* Darker background for textarea */
     color: var(--text-color);
 }
 
-.button {
+.button { /* From Block 4 */
     background-color: var(--primary-color);
     color: white;
     padding: 14px 24px;
@@ -146,70 +215,1075 @@ body.night-mode textarea {
     font-weight: 500;
 }
 
-.button.secondary {
+.button.secondary { /* From Block 4 */
     background-color: var(--secondary-color);
 }
 
-.button:hover {
+.button:hover { /* From Block 4 */
     transform: translateY(-3px);
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-body.night-mode .button {
+body.night-mode .button { /* From Block 4 */
     box-shadow: var(--box-shadow);
 }
 
-.button-container {
+.button-container { /* From Block 4 */
     display: flex;
     justify-content: space-around;
-    margin-top: 20px;
+    margin-top: 20px; /* Block 1 had 30px, Block 2/3/4 had 20px */
+    gap: 10px; /* From Block 1, persisted */
+    flex-wrap: wrap; /* From Block 1, persisted */
 }
 
-.content {
+/* Content Layout */
+.content { /* From Block 4 */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Block 1/2 had stretch, Block 3/4 had center */
+    justify-content: center; /* Block 1/2 had flex-start, Block 3/4 had center */
+    min-height: 70vh; /* From Block 1/2 */
+    height: 100%; /* From Block 3/4 */
+}
+
+/* Quiz Specific Elements (from Block 1 & 2) */
+#questionArea { /* From Block 2 */
+    margin-bottom: 20px;
+    position: relative;
+}
+
+#answersContainer { /* From Block 2 */
+    display: flex;
+    flex-direction: column;
+}
+
+.answer { /* From Block 2 */
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none; /* Block 1 added border: 2px solid transparent; */
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease; /* Block 1 added border transition */
+    display: flex;
+    align-items: center;
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+    text-align: left; /* From Block 1 */
+}
+
+body.night-mode .answer { /* From Block 2 */
+    background-color: rgba(50, 50, 50, 0.9);
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+.answer:hover { /* From Block 2 */
+    background-color: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+}
+
+body.night-mode .answer:hover { /* From Block 2 */
+    background-color: rgba(70, 70, 70, 0.9);
+}
+
+.answer.selected { /* From Block 2 */
+    background-color: rgba(200, 200, 200, 0.9);
+    /* border-color: var(--primary-color); From Block 1 */
+}
+
+body.night-mode .answer.selected { /* From Block 2 */
+    background-color: rgba(70, 70, 70, 0.9);
+     /* border-color: var(--primary-color); From Block 1 */
+}
+
+.answer.correct { /* From Block 2 */
+    background-color: rgba(76, 175, 80, 0.8); /* Block 1 used !important */
+    color: white; /* Block 1 used !important */
+     /* border-color: #4CAF50 !important; From Block 1 */
+}
+
+.answer.wrong { /* From Block 2 */
+    background-color: rgba(244, 67, 54, 0.8); /* Block 1 used !important */
+    color: white; /* Block 1 used !important */
+     /* border-color: #F44336 !important; From Block 1 */
+}
+
+.progress-container { /* From Block 2 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 10px; /* Block 1 had 10px 15px */
+    border-radius: 5px;
+    gap: 15px; /* From Block 1 */
+}
+
+body.night-mode .progress-container { /* From Block 2 */
+    background-color: rgba(50, 50, 50, 0.8);
+}
+
+.progress-bar { /* From Block 2 */
+    width: 100%; /* Block 1 had flex-grow: 1; */
+    height: 10px;
+    background-color: rgba(200, 200, 200, 0.8);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-bar-fill { /* From Block 2 */
+    height: 100%;
+    background-color: var(--secondary-color);
+    border-radius: 5px;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.question-count { /* From Block 2 */
+    font-size: 14px;
+    color: var (--text-color);
+    white-space: nowrap; /* From Block 1 */
+}
+
+.question-card { /* From Block 2 */
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 10px;
+    padding: 30px;
+    box-shadow: var(--box-shadow);
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+body.night-mode .question-card { /* From Block 2 */
+    background-color: rgba(50, 50, 50, 0.9);
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+/* Results Specific Elements (from Block 1 & 2) */
+.result-content { /* From Block 1 */
+    padding: 10px 0;
+}
+
+.score-graphics { /* From Block 1 */
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-start;
+    margin: 25px 0;
+}
+
+.score-section { /* From Block 2 */
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 100%;
+    margin: 10px;
+    text-align: center; /* From Block 1 */
 }
 
-.slide::before { 
-    content: "";
-    position: absolute;
-    top: -50px;
-    left: -50px;
-    width: 200px;
-    height: 200px;
-    background-color: var(--secondary-color);
-    opacity: 0.15;
+.score-icon { /* From Block 2 */
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.score-icon.correct { /* From Block 2 */
+    color: #4CAF50;
+}
+
+.score-icon.wrong { /* From Block 2 */
+    color: #F44336;
+}
+
+.score-label { /* From Block 2 */
+    font-size: 16px;
+    color: var(--text-color);
+    margin-bottom: 10px; /* From Block 1 */
+}
+
+.circle-chart { /* From Block 2 */
+    width: 100px;
+    height: 100px;
     border-radius: 50%;
-    z-index: -1;
+    background-color: rgba(200, 200, 200, 0.8);
+    position: relative;
+    margin-bottom: 15px;
+    display: flex; /* From Block 1 */
+    align-items: center; /* From Block 1 */
+    justify-content: center; /* From Block 1 */
+    cursor: pointer; /* From Block 1 */
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.1); /* From Block 1 */
 }
 
-.slide::after {
-    content: "";
+body.night-mode .circle-chart { /* From Block 2 */
+    background-color: rgba(70, 70, 70, 0.8);
+    box-shadow: inset 0 0 10px rgba(255,255,255,0.1); /* From Block 1 */
+}
+
+.circle-chart.correct { /* From Block 2 */
+    background-image: conic-gradient(#4CAF50 var(--percentage, 0%), #eee 0); /* Block 1 had var(--percentage, 0%) */
+}
+
+body.night-mode .circle-chart.correct { /* From Block 2 */
+    background-image: conic-gradient(#4CAF50 var(--percentage, 0%), #2c2c2c 0); /* Block 1 had var(--percentage, 0%) */
+}
+
+.circle-chart.wrong { /* From Block 2 */
+    background-image: conic-gradient(#F44336 var(--percentage, 0%), #eee 0); /* Block 1 had var(--percentage, 0%) */
+}
+
+body.night-mode .circle-chart.wrong { /* From Block 2 */
+    background-image: conic-gradient(#F44336 var(--percentage, 0%), #2c2c2c 0); /* Block 1 had var(--percentage, 0%) */
+}
+
+.circle-chart::before { /* From Block 2 */
+    content: attr(data-percentage);
     position: absolute;
-    bottom: -50px;
-    right: -50px;
-    width: 150px;
-    height: 150px;
-    background-color: var(--primary-color);
-    opacity: 0.15; 
-    transform: rotate(45deg);
-    z-index: -1; 
+    top: 50%; /* Block 1 removed top/left/transform */
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    color: var(--text-color);
+    /* Styles from Block 1 overwriting block 2 */
+    font-weight: 600;
+    background-color: rgba(255, 255, 255, 0.7);
+    width: 70%;
+    height: 70%;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
 }
 
-body.night-mode .slide::before {
+body.night-mode .circle-chart::before { /* From Block 1 */
+    background-color: rgba(50, 50, 50, 0.7);
+    color: var(--text-color);
+}
+
+.answer-list { /* From Block 2 */
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    margin-top: 15px;
+    /* Styles from Block 1 */
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    padding: 10px;
+    background-color: rgba(0,0,0,0.02);
+}
+
+body.night-mode .answer-list { /* From Block 2 */
+    background-color: rgba(50, 50, 50, 0.8); /* Overwritten by Block 1 */
+     /* From Block 1 */
+    border-color: #444;
+    background-color: rgba(255,255,255,0.05);
+}
+
+.answer-list li { /* From Block 2 */
+    margin-bottom: 5px; /* Block 1 had 8px */
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px; /* Block 1 had 10px 15px */
+    background-color: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
+     /* Styles from Block 1 */
+    font-size: 0.95em;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+}
+.answer-list li:last-child { /* From Block 1 */
+    margin-bottom: 0;
+}
+
+.answer-list li:hover { /* From Block 1 */
+    background-color: rgba(245, 245, 245, 0.9);
+}
+
+body.night-mode .answer-list li { /* From Block 2 */
+    background-color: rgba(50, 50, 50, 0.8);
+    color: var(--text-color);
+    border-color: #555; /* From Block 1 */
+}
+
+body.night-mode .answer-list li:hover { /* From Block 1 */
+     background-color: rgba(70, 70, 70, 0.9);
+}
+
+.answer-list li small { /* From Block 1 */
+    display: block;
+    color: #666;
+    margin-top: 4px;
+    font-style: italic;
+}
+body.night-mode .answer-list li small { /* From Block 1 */
+    color: #aaa;
+}
+
+#scoreText { /* From Block 1 */
+    font-size: 1.4em;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.result-divider { /* From Block 1 */
+    border: none;
+    height: 1px;
+    background-color: #eee;
+    margin: 30px 0;
+}
+body.night-mode .result-divider { /* From Block 1 */
+    background-color: #444;
+}
+
+/* Help Button */
+.help-button { /* From Block 2 */
+    position: absolute; /* Block 1 removed absolute */
+    top: 20px; /* Block 1 used different position/size/shape */
+    right: 20px;
     background-color: var(--secondary-color);
+    color: white;
+    padding: 8px 12px; /* Block 1 had 0 padding, width/height 30px, border-radius 50% */
+    border: none;
+    border-radius: 5px; /* Block 1 had 50% */
+    font-size: 14px; /* Block 1 had 16px */
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: var(--box-shadow);
+    /* Styles from Block 1 */
+    font-weight: bold;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
 }
 
-body.night-mode .slide::after {
-    background-color: var(--primary-color);
+.help-button:hover { /* From Block 2 */
+    transform: translateY(-2px);
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.18);
 }
 
-@media (max-width: 768px) {
+body.night-mode .help-button { /* From Block 2 */
+    box-shadow: var(--box-shadow);
+}
+
+/* File Editing Specific Elements (from Block 1 & 2) */
+.file-name { /* From Block 2 */
+    font-size: 1.2rem; /* Block 1 had 0.9em */
+    margin-bottom: 15px; /* Block 1 had no margin */
+    color: var(--secondary-color);
+    text-align: left;
+    display: inline-block;
+    margin-left: 10px; /* Block 1 had no margin */
+    vertical-align: middle;
+    white-space: nowrap; /* From Block 1 */
+    overflow: hidden; /* From Block 1 */
+    text-overflow: ellipsis; /* From Block 1 */
+    max-width: 150px; /* From Block 1 */
+    font-style: italic; /* From Block 1 */
+}
+
+body.night-mode .file-name { /* From Block 2 */
+    color: var(--secondary-color);
+}
+
+#fileContentContainer { /* From Block 2 */
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-top: 20px;
+}
+
+#filesContainer { /* From Block 2 */
+    margin-top: 15px;
+}
+
+.control-panel { /* From Block 2 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+body.night-mode .control-panel { /* From Block 2 */
+    border-bottom-color: rgba(255,255,255,0.1);
+}
+
+.control-panel .button { /* From Block 2 */
+    margin-left: 10px;
+    padding: 10px 18px;
+    font-size: 0.95em;
+}
+.control-panel .button:first-child { /* From Block 2 */
+    margin-left: 0;
+}
+
+.back-button { /* From Block 2 */
+    position: absolute;
+    top: 25px;
+    left: 25px;
+    padding: 10px 18px;
+    font-size: 0.95em;
+    z-index: 10;
+}
+
+#fileContent { /* From Block 2 */
+    width: calc(100% - 30px);
+    padding: 15px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    resize: vertical;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+    min-height: 300px;
+}
+
+body.night-mode #fileContent { /* From Block 2 */
+    background-color: rgba(50, 50, 50, 0.8);
+    color: var(--text-color);
+}
+
+.file-item { /* From Block 2 */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    text-align: left;
+}
+
+body.night-mode .file-item { /* From Block 2 */
+    background-color: rgba(50, 50, 50, 0.9);
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+.file-item:hover { /* From Block 2 */
+    background-color: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+}
+
+body.night-mode .file-item:hover { /* From Block 2 */
+    background-color: rgba(70, 70, 70, 0.9);
+}
+
+.file-item > div:first-child { /* From Block 2 */
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    margin-right: 15px;
+    overflow: hidden;
+}
+
+.file-item > div:first-child span { /* From Block 2 */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
+
+.file-item > div:last-child { /* From Block 2 */
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.icon-button { /* From Block 2 */
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    font-size: 1.2em;
+    margin-left: 10px;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+    flex-shrink: 0;
+}
+
+body.night-mode .icon-button { /* From Block 2 */
+    color: var(--text-color);
+}
+
+.icon-button:hover { /* From Block 2 */
+    color: var(--secondary-color);
+}
+
+.file-item .button { /* From Block 2 */
+    margin-left: 8px;
+    padding: 8px 14px;
+    font-size: 0.9em;
+}
+
+.list-button { /* From Block 2 */
+    /* No specific style needed now, handled by .control-panel .button */
+}
+
+/* Modal Styles (from Block 2) */
+.modal { /* From Block 2 */
+    display: none;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content { /* From Block 2 */
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+    position: relative;
+    color: var(--text-color);
+    max-width: 90%;
+    width: 400px;
+}
+
+body.night-mode .modal-content { /* From Block 2 */
+    background-color: #3a3a3a;
+    color: var(--text-color);
+    box-shadow: var(--box-shadow);
+}
+
+.modal-content h2 { /* From Block 2 */
+     margin-bottom: 20px;
+}
+
+.close { /* From Block 2 */
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    color: var(--text-color);
+    transition: color 0.3s ease;
+}
+
+body.night-mode .close { /* From Block 2 */
+    color: var(--text-color);
+}
+
+.close:hover { /* From Block 2 */
+    color: var(--secondary-color);
+}
+
+#fileType,
+#fileNameInput,
+#newFileNameInput { /* From Block 2 */
+    display: block;
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin: 15px auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    color: var(--text-color);
+    box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.1);
+    font-size: 1em;
+}
+
+body.night-mode #fileType,
+body.night-mode #fileNameInput,
+body.night-mode #newFileNameInput { /* From Block 2 */
+    background-color: #444;
+    border-color: #666;
+    color: #eee;
+}
+
+.modal-content label { /* From Block 2 */
+    display: block;
+    margin-top: 20px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    text-align: left;
+    margin-left: 11px;
+}
+
+.modal-content .button { /* From Block 2 */
+    margin-top: 25px; /* Block 2 second definition had 15px */
+    display: inline-block;
+    width: auto;
+}
+
+.modal-content input[type="text"],
+.modal-content select { /* From Block 2 */
+    display: block;
+    width: calc(100% - 22px);
+    padding: 10px;
+    margin: 15px 0; /* Was 15px auto previously */
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+    color: var(--text-color);
+    box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+body.night-mode .modal-content input[type="text"],
+body.night-mode .modal-content select { /* From Block 2 */
+    background-color: #444;
+    border-color: #666;
+    color: #eee;
+}
+
+
+/* Visual Editor Styles (from Block 2) */
+#visualEditorContainer { /* From Block 2 */
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-top: 10px;
+    border-radius: 8px;
+    max-height: 45vh;
+    overflow-y: auto;
+    background-color: rgba(0, 0, 0, 0.02);
+}
+body.night-mode #visualEditorContainer { /* From Block 2 */
+    border-color: #555;
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+.visual-question { /* From Block 2 */
+    background: rgba(0, 0, 0, 0.05);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    border-left: 3px solid var(--primary-color);
+}
+body.night-mode .visual-question { /* From Block 2 */
+    background: rgba(255, 255, 255, 0.08);
+    border-left-color: var(--primary-color);
+}
+
+.visual-question label, .visual-answer label { /* From Block 2 */
+    display: block; /* Overwritten below for .visual-answer label */
+    margin-bottom: 5px;
+    font-weight: bold;
+    font-size: 0.95em;
+    color: var(--text-color);
+}
+
+.visual-question input[type="text"],
+.visual-question textarea { /* From Block 2 */
+    width: calc(100% - 22px);
+    margin-bottom: 8px;
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1em;
+    background-color: #fff;
+    color: var(--text-color);
+}
+body.night-mode .visual-question input[type="text"],
+body.night-mode .visual-question textarea { /* From Block 2 */
+    background-color: #444;
+    border-color: #666;
+    color: #eee;
+}
+.visual-question textarea { /* From Block 2 */
+    resize: vertical;
+    min-height: 40px;
+}
+
+.visual-answer { /* From Block 2 */
+    margin-left: 20px;
+    border-left: 2px solid var(--secondary-color);
+    padding: 5px 0px 5px 15px;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+body.night-mode .visual-answer { /* From Block 2 */
+     border-left-color: var(--secondary-color);
+}
+
+.visual-answer label { /* From Block 2 */
+    display: inline-flex !important;
+    align-items: center;
+    margin-right: 5px;
+    margin-bottom: 0;
+    font-weight: bold;
+    cursor: pointer;
+    min-width: 50px;
+}
+
+.visual-answer input[type="radio"] { /* From Block 2 */
+    margin-right: 5px;
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+}
+
+.visual-answer input[type="text"] { /* From Block 2 */
+    flex-grow: 1;
+    width: auto;
+    padding: 4px 6px;
+    font-size: 0.95em;
+    background-color: #fff;
+    color: var(--text-color);
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+body.night-mode .visual-answer input[type="text"] { /* From Block 2 */
+     background-color: #444;
+     border-color: #666;
+     color: #eee;
+}
+
+.visual-controls { /* From Block 2 */
+    margin-top: 10px;
+    text-align: right;
+}
+
+.visual-controls button,
+#visualEditorView .button.small,
+.visual-answer .button.small { /* From Block 2 */
+    margin-left: 5px;
+    padding: 4px 8px;
+    font-size: 0.85em;
+    min-width: auto;
+    line-height: 1.2;
+}
+
+.edit-controls { /* From Block 2 */
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 15px;
+}
+
+#executionFrame { /* From Block 2 */
+    width: 100%;
+    height: 60vh;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+body.night-mode #executionFrame { /* From Block 2 */
+    border-color: #555;
+    background-color: #eee;
+}
+
+#editPage .content { /* From Block 2 */
+    align-items: stretch;
+}
+
+/* Time Stats & Charts Specific Elements (from Block 1) */
+.show-more-container { /* From Block 1 */
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+#timeStatsContainer { /* From Block 1 */
+     margin-top: 20px;
+}
+
+.indicator { /* From Block 1 */
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+    box-shadow: 0 0 3px rgba(0,0,0,0.2);
+}
+.indicator.correct { background-color: #4CAF50; } /* From Block 1 */
+.indicator.wrong { background-color: #F44336; } /* From Block 1 */
+.indicator.skipped { background-color: #FFC107; } /* From Block 1 */
+
+#timeStatsContainer table { /* From Block 1 */
+    width: 100%;
+    margin-top: 0;
+    border-collapse: collapse;
+    text-align: left;
+    table-layout: fixed;
+}
+
+#timeStatsContainer th,
+#timeStatsContainer td { /* From Block 1 */
+    border: 1px solid #ddd;
+    padding: 10px 12px;
+    vertical-align: middle;
+    word-wrap: break-word;
+     border-left: none;
+     border-right: none;
+}
+#timeStatsContainer tr:first-child th,
+#timeStatsContainer tr:first-child td { /* From Block 1 */
+    border-top: none;
+}
+#timeStatsContainer tr:last-child th,
+#timeStatsContainer tr:last-child td { /* From Block 1 */
+    border-bottom: none;
+}
+
+#timeStatsContainer th:nth-child(1),
+#timeStatsContainer td:nth-child(1) { width: 60%; } /* From Block 1 */
+#timeStatsContainer th:nth-child(2),
+#timeStatsContainer td:nth-child(2) { width: 20%; text-align: center;} /* From Block 1 */
+#timeStatsContainer th:nth-child(3),
+#timeStatsContainer td:nth-child(3) { width: 20%; text-align: center;} /* From Block 1 */
+
+#timeStatsContainer th { /* From Block 1 */
+    background-color: #f8f8f8;
+    font-weight: 600;
+     border-bottom: 2px solid #eee;
+}
+
+.sortable-header { /* From Block 1 */
+    cursor: pointer;
+    position: relative;
+}
+.sortable-header:hover { /* From Block 1 */
+    background-color: #f0f0f0;
+}
+body.night-mode .sortable-header:hover { /* From Block 1 */
+     background-color: #404040;
+}
+
+.sort-indicator { /* From Block 1 */
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    margin-left: 8px;
+    vertical-align: middle;
+    opacity: 0.5;
+}
+
+.sort-indicator.asc { /* From Block 1 */
+    border-bottom: 5px solid var(--text-color);
+    opacity: 1;
+}
+
+.sort-indicator.desc { /* From Block 1 */
+    border-top: 5px solid var(--text-color);
+    opacity: 1;
+}
+
+body.night-mode #timeStatsContainer th { /* From Block 1 */
+     background-color: #3a3a3a;
+     color: #eee;
+     border-color: #555;
+}
+body.night-mode #timeStatsContainer td { /* From Block 1 */
+     border-color: #555;
+}
+body.night-mode #timeStatsContainer tr:hover td { /* From Block 1 */
+    background-color: rgba(255, 255, 255, 0.05);
+}
+#timeStatsContainer tr:hover td { /* From Block 1 */
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.chart-container { /* From Block 1 */
+    border: 1px solid #eee;
+    padding: 20px;
+    margin-top: 25px;
+    margin-bottom: 25px;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: center;
+    color: #888;
+    position: relative;
+    background-color: rgba(0,0,0,0.02);
+    border-radius: 8px;
+}
+ .chart-container h4 { /* From Block 1 */
+     width: 100%;
+     text-align: center;
+     margin: 0 0 15px 0;
+     padding-bottom: 10px;
+     border-bottom: 1px solid #eee;
+     font-size: 1.1em;
+     color: #555;
+     font-weight: 600;
+ }
+ .chart-container canvas { /* From Block 1 */
+    max-width: 100%;
+    height: auto;
+    max-height: 350px;
+    cursor: pointer;
+ }
+  .chart-container p { /* From Block 1 */
+      font-style: italic;
+      margin-top: 20px;
+  }
+
+ body.night-mode .chart-container { /* From Block 1 */
+    border-color: #444;
+    color: #aaa;
+    background-color: rgba(255,255,255,0.05);
+ }
+body.night-mode .chart-container h4 { /* From Block 1 */
+     color: #bbb;
+     border-bottom-color: #444;
+ }
+
+ .time-summary { /* From Block 1 */
+    display: flex;
+    justify-content: space-around;
+    padding: 15px 0;
+    margin-bottom: 25px;
+    background-color: rgba(0,0,0,0.02);
+    border-radius: 8px;
+    border: 1px solid #eee;
+ }
+ body.night-mode .time-summary { /* From Block 1 */
+     border-color: #444;
+      background-color: rgba(255,255,255,0.05);
+ }
+ .time-summary div { /* From Block 1 */
+     text-align: center;
+     padding: 0 15px;
+ }
+  .time-summary .stat-label { /* From Block 1 */
+      font-size: 0.95em;
+      color: #666;
+      display: block;
+      margin-bottom: 5px;
+  }
+   body.night-mode .time-summary .stat-label { /* From Block 1 */
+       color: #aaa;
+   }
+  .time-summary .stat-value { /* From Block 1 */
+      font-size: 1.4em;
+      font-weight: 600;
+      color: var(--text-color);
+  }
+  body.night-mode .time-summary .stat-value { /* From Block 1 */
+      color: var(--text-color);
+  }
+
+  .table-container { /* From Block 1 */
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      background-color: #fff;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+  }
+   body.night-mode .table-container { /* From Block 1 */
+       border-color: #444;
+        background-color: #2c2c2c;
+         box-shadow: inset 0 1px 3px rgba(255,255,255,0.05);
+   }
+
+/* Responsive Adjustments (Keeping last defined block for each query) */
+@media (max-width: 768px) { /* From Block 4 */
     .slide {
-        max-width: 90%;
-        width: 90%;
+        max-width: 90%; /* Block 1 had 95% */
+        width: 90%; /* Block 1 had 95% */
+        padding: 20px; /* From Block 1 */
     }
+     /* Styles merged from Block 1 below */
+    .header {
+        gap: 10px;
+    }
+    h2 {
+        font-size: 1.3em;
+    }
+    .button {
+        padding: 12px 18px;
+        font-size: 15px;
+    }
+    .score-graphics {
+        flex-direction: column;
+        align-items: center;
+    }
+    .score-section {
+        margin-bottom: 20px;
+    }
+     .circle-chart {
+         width: 90px;
+         height: 90px;
+     }
+     .circle-chart::before {
+         font-size: 16px;
+     }
+     .answer-list {
+         max-height: 150px;
+     }
+     .time-summary {
+        flex-direction: column;
+        gap: 15px;
+     }
+     .table-container {
+        max-height: 300px;
+     }
+     #timeStatsContainer th:nth-child(1),
+     #timeStatsContainer td:nth-child(1) { width: 50%; }
+     #timeStatsContainer th:nth-child(2),
+     #timeStatsContainer td:nth-child(2) { width: 25%;}
+     #timeStatsContainer th:nth-child(3),
+     #timeStatsContainer td:nth-child(3) { width: 25%;}
+}
+
+@media (max-width: 480px) { /* From Block 1 */
+     .button-container {
+        flex-direction: column;
+        align-items: stretch;
+     }
+     .button {
+         width: 100%;
+         box-sizing: border-box;
+     }
+      .header {
+         gap: 10px;
+         align-items: center;
+      }
+      .help-button {
+          width: 28px;
+          height: 28px;
+          font-size: 14px;
+      }
+      .toggle-container {
+         /* Let space-between handle positioning */
+      }
+      .progress-container {
+         flex-direction: column;
+         align-items: stretch;
+         gap: 8px;
+      }
+      .file-name {
+          max-width: none;
+          text-align: center;
+      }
+      .question-count {
+          text-align: center;
+      }
+      .score-graphics {
+          margin: 15px 0;
+      }
+      .circle-chart {
+          width: 80px;
+          height: 80px;
+      }
+       .circle-chart::before {
+           font-size: 14px;
+       }
 }

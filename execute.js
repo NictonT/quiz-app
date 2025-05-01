@@ -13,14 +13,14 @@ let totalQuestions = 0;
 let completedQuestions = 0;
 let currentQuestionStartTime = 0;
 let questionTimeStats = [];
-let timeStatsRendered = false; // Flag to check if time stats have been rendered
+let timeStatsRendered = false;
+let currentSortColumn = null; // Track sorting state
+let currentSortDirection = 'none'; // 'asc', 'desc', 'none'
 
 document.addEventListener('DOMContentLoaded', () => {
     const isQuizPage = document.getElementById('quizPage');
-    // No longer need to check for timeStatsPage specifically
-    // const isTimeStatsPage = document.getElementById('timeStatsPage');
 
-    if (isQuizPage) { // This script now only runs on execute.html
+    if (isQuizPage) {
         const storedData = localStorage.getItem('quizDataToExecute');
         if (storedData) {
             try {
@@ -41,11 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         questions = []; alert("Error: Could not load valid quiz questions.");
                     }
                 } else {
-                     const originalLength = questions.length;
                      questions = questions.filter(q => q && typeof q === 'object' && q.question && q.answers && typeof q.answers === 'object' && q.correctAnswer);
                 }
                 if (questions.length > 0) {
-                    localStorage.setItem('quizDataForRestart', JSON.stringify(questions)); // Store for restart
+                    localStorage.setItem('quizDataForRestart', JSON.stringify(questions));
                     resetQuizStateForNewRound(false);
                     randomizedQuestions = shuffleArray(questions);
                     totalQuestions = randomizedQuestions.length;
@@ -90,9 +89,8 @@ function updateNightMode() {
              if (otherToggle) {
                  otherToggle.checked = isEnabled;
              }
-             // Re-render charts if visible and night mode changes
              if (!document.getElementById('timeStatsContainer')?.classList.contains('hidden') && timeStatsRendered) {
-                initializeCharts(questionTimeStats); // Assumes chart colors depend on night mode
+                initializeCharts(questionTimeStats);
              }
         });
     }
@@ -139,7 +137,7 @@ function loadQuestion() {
         const helpButton = document.querySelector('.help-button');
          if(submitButton) { submitButton.style.display = 'block'; submitButton.disabled = true; }
          if(skipButton) { skipButton.style.display = retryingQuestion ? 'none' : 'block'; skipButton.disabled = false; }
-         if(helpButton) helpButton.style.display = 'block';
+         if(helpButton) helpButton.style.display = 'block'; // Keep help button visible
         currentQuestionStartTime = Date.now();
         updateProgressBar();
     } else {
@@ -179,7 +177,7 @@ function selectAnswer(selectedElement) {
      }
      selectedAnswer = { displayKey, originalKey, answerText };
      document.querySelectorAll('.answer').forEach(el => {
-         el.classList.remove('selected'); // Only remove selected class visually
+         el.classList.remove('selected');
      });
      selectedElement.classList.add('selected');
      const submitButton = document.getElementById('submitButton');
@@ -195,30 +193,28 @@ function submitAnswer() {
     const duration = Date.now() - currentQuestionStartTime;
     const isCorrect = selectedAnswer.originalKey === currentQuestion.correctAnswer;
 
-    document.querySelectorAll('.answer').forEach(el => {
-        el.onclick = null; // Disable clicking after submission
-        el.classList.remove('selected'); // Remove visual selection indicator
-    });
-    const submitButton = document.getElementById('submitButton');
-    const helpButton = document.querySelector('.help-button');
-    const skipButton = document.getElementById('skipButton');
-
-    if(submitButton) submitButton.disabled = true;
-    if(helpButton) helpButton.style.display = 'none';
-    if(skipButton) skipButton.style.display = 'none';
-
-    const selectedElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === selectedAnswer.originalKey);
-    const correctElementKey = currentQuestion.correctAnswer;
-    const correctElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === correctElementKey);
-
+    // --- Immediate Feedback REMOVED ---
+    // document.querySelectorAll('.answer').forEach(el => {
+    //     el.onclick = null;
+    //     el.classList.remove('selected');
+    // });
+    // const submitButton = document.getElementById('submitButton');
+    // const helpButton = document.querySelector('.help-button');
+    // const skipButton = document.getElementById('skipButton');
+    // if(submitButton) submitButton.disabled = true;
+    // if(helpButton) helpButton.style.display = 'none';
+    // if(skipButton) skipButton.style.display = 'none';
+    // const selectedElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === selectedAnswer.originalKey);
+    // const correctElementKey = currentQuestion.correctAnswer;
+    // const correctElement = [...document.querySelectorAll('.answer')].find(el => el.dataset.originalKey === correctElementKey);
 
     if (isCorrect) {
         recordCorrectAnswer(currentIndex, selectedAnswer, duration);
-        if(selectedElement) selectedElement.classList.add('correct');
+        // if(selectedElement) selectedElement.classList.add('correct'); // REMOVED
     } else {
         recordWrongAnswer(currentIndex, selectedAnswer, false, duration);
-        if(selectedElement) selectedElement.classList.add('wrong');
-        if(correctElement) correctElement.classList.add('correct'); // Highlight correct one as well
+        // if(selectedElement) selectedElement.classList.add('wrong'); // REMOVED
+        // if(correctElement) correctElement.classList.add('correct'); // REMOVED
     }
 
     if (!retryingQuestion) {
@@ -226,24 +222,22 @@ function submitAnswer() {
     }
     updateProgressBar();
 
+    // --- Proceed Immediately ---
     if (retryingQuestion) {
         retryingQuestion = false;
         retryIndex = -1;
-         // Go back to results page after retrying one question
-         setTimeout(() => {
-             showResults();
-         }, 1200); // Give slightly longer delay to see feedback
+        showResults(); // Go directly back to results after retry
     } else {
         currentIndex++;
-        setTimeout(() => {
-            if (currentIndex >= randomizedQuestions.length) {
-                showResults();
-            } else {
-                loadQuestion();
-            }
-        }, 1200); // Delay before loading next question or results
+        if (currentIndex >= randomizedQuestions.length) {
+            showResults();
+        } else {
+            loadQuestion(); // Load next question immediately
+        }
     }
+    // --- Removed setTimeout ---
 }
+
 
 function skipQuestion() {
     if (retryingQuestion) return;
@@ -257,7 +251,7 @@ function skipQuestion() {
     if (currentIndex >= randomizedQuestions.length) {
         showResults();
     } else {
-        loadQuestion(); // Load next question immediately after skip
+        loadQuestion();
     }
 }
 
@@ -271,10 +265,10 @@ function showAnswer() {
             el.onclick = null;
             el.classList.remove('selected', 'wrong');
             if (el.dataset.originalKey === correctAnswerKey) {
-                el.classList.add('correct');
+                el.classList.add('correct'); // Apply correct style
                 el.style.opacity = '1';
             } else {
-                 el.style.opacity = '0.6'; // Dim incorrect answers
+                 el.style.opacity = '0.6';
             }
         });
 
@@ -282,8 +276,9 @@ function showAnswer() {
          const helpButton = document.querySelector('.help-button');
          const skipButton = document.getElementById('skipButton');
 
+         // Hide submit, keep skip enabled, hide help itself
          if(submitButton) submitButton.style.display = 'none';
-         if(helpButton) helpButton.style.display = 'none';
+         if(helpButton) helpButton.style.display = 'none'; // Hide the help button itself
          if(skipButton) {
              skipButton.style.display = 'block';
              skipButton.disabled = false;
@@ -306,15 +301,14 @@ function recordWrongAnswer(questionIndex, selectedAnswerObj, skipped = false, du
         duration: duration
     };
 
-    if (existingStatIndex !== -1 && retryingQuestion) { // Only overwrite if retrying
+    if (existingStatIndex !== -1 && retryingQuestion) {
         questionTimeStats[existingStatIndex] = statData;
-    } else if (existingStatIndex === -1) { // Add if new
+    } else if (existingStatIndex === -1) {
         questionTimeStats.push(statData);
-    } // Otherwise, do nothing (don't overwrite first attempt unless retrying)
+    }
 
-    // Update simple wrongAnswers list (used for redoWrong logic primarily)
     const existingWrongIndex = wrongAnswers.findIndex(q => q.question === question.question);
-     if (existingWrongIndex === -1) { // Only add to this list once
+     if (existingWrongIndex === -1) {
           wrongAnswers.push({
               question: question.question,
               selected: statData.selected,
@@ -336,22 +330,19 @@ function recordCorrectAnswer(questionIndex, selectedAnswerObj, duration = 0) {
         duration: duration
     };
 
-     if (existingStatIndex !== -1 && retryingQuestion) { // Only overwrite if retrying
+     if (existingStatIndex !== -1 && retryingQuestion) {
         questionTimeStats[existingStatIndex] = statData;
-         // If it was previously wrong, remove from wrongAnswers list upon correction
          removeFromWrongAnswers(question.question);
-    } else if (existingStatIndex === -1) { // Add if new
+    } else if (existingStatIndex === -1) {
         questionTimeStats.push(statData);
-    } // Otherwise, do nothing
+    }
 
-    // Update simple correctAnswers list (used for initial display)
     const existingCorrectIndex = correctAnswers.findIndex(q => q.question === question.question);
-    if (existingCorrectIndex === -1) { // Only add once
+    if (existingCorrectIndex === -1) {
         correctAnswers.push({
             question: question.question,
             correct: statData.correct
         });
-        // If retrying a wrong answer and getting it right, ensure it's removed from the wrong list
         if (retryingQuestion) {
              removeFromWrongAnswers(question.question);
         }
@@ -366,9 +357,12 @@ function removeFromWrongAnswers(questionText) {
 
 function showResults() {
     showSlide('resultPage');
-    timeStatsRendered = false; // Reset flag when showing results initially
-    document.getElementById('timeStatsContainer').classList.add('hidden'); // Ensure details are hidden initially
-    document.getElementById('toggleTimeDetailsButton').textContent = 'Show Time Details'; // Reset button text
+    timeStatsRendered = false;
+    currentSortColumn = null; // Reset sort state
+    currentSortDirection = 'none';
+    document.getElementById('timeStatsContainer').classList.add('hidden');
+    document.getElementById('toggleTimeDetailsButton').textContent = 'Show Time Details';
+    updateSortIndicators(); // Clear indicators
 
     const correctList = document.getElementById('correctList');
     const wrongList = document.getElementById('wrongList');
@@ -381,7 +375,6 @@ function showResults() {
     correctList.innerHTML = ''; wrongList.innerHTML = '';
     correctList.classList.add('hidden'); wrongList.classList.add('hidden');
 
-    // Populate lists based on the *final* status in questionTimeStats
     const finalCorrectStats = questionTimeStats.filter(s => s.status === 'correct');
     const finalWrongStats = questionTimeStats.filter(s => s.status === 'wrong' || s.status === 'skipped');
 
@@ -393,25 +386,22 @@ function showResults() {
     finalWrongStats.forEach(item => {
         const li = document.createElement('li');
         const indicatorClass = item.skipped ? 'skipped' : 'wrong';
-        const statusText = item.skipped ? 'Skipped' : (item.selected ? 'Wrong' : 'Wrong (Help Used?)'); // Basic check if selected is null
+        const statusText = item.skipped ? 'Skipped' : (item.selected ? 'Wrong' : 'Wrong (Help Used?)');
         let details = item.skipped ? '' : `<i><small>(Selected: ${item.selected || 'None'}, Correct: ${item.correct || 'N/A'})</small></i>`;
         li.innerHTML = `<div class="indicator ${indicatorClass}"></div> ${item.question} <br><i><small>(${statusText})</small></i> ${details}`;
         li.onclick = () => retryQuestion(item.question); wrongList.appendChild(li);
     });
 
     const finalCorrect = finalCorrectStats.length;
-    const finalTotal = totalQuestions; // Base percentage on total questions defined
+    const finalTotal = totalQuestions;
 
     let correctPercent = 0; let wrongPercent = 0;
+    let finalWrongOrSkippedCount = 0;
+
     if (finalTotal > 0) {
         correctPercent = Math.round((finalCorrect / finalTotal) * 100);
-        // Calculate wrong based on total questions minus correct
-        const finalWrongOrSkippedCount = finalTotal - finalCorrect;
+        finalWrongOrSkippedCount = finalTotal - finalCorrect;
         wrongPercent = 100 - correctPercent;
-    } else {
-         // Handle case with 0 total questions if necessary
-         finalCorrect = 0;
-         finalWrongOrSkippedCount = 0;
     }
 
     scoreTextEl.innerText = `Score: ${correctPercent}% (${finalCorrect}/${finalTotal})`;
@@ -420,14 +410,9 @@ function showResults() {
     wrongChartEl.style.setProperty('--percentage', `${wrongPercent}%`);
     correctChartEl.setAttribute('data-percentage', `${correctPercent}%`);
     wrongChartEl.setAttribute('data-percentage', `${wrongPercent}%`);
-    // Optionally keep data-count if needed for display inside circle
-    // correctChartEl.setAttribute('data-count', finalCorrect);
-    // wrongChartEl.setAttribute('data-count', finalWrongOrSkippedCount);
 
     correctChartEl.onclick = toggleCorrectList;
     wrongChartEl.onclick = toggleWrongList;
-
-    // No need to save to localStorage if staying on the same page
 }
 
 
@@ -437,7 +422,6 @@ function updateProgressBar() {
     if (!barFill || !countEl) return;
     let percent = 0;
     if (totalQuestions > 0) {
-        // Ensure completedQuestions doesn't exceed totalQuestions for display
         const displayCompleted = Math.min(completedQuestions, totalQuestions);
         percent = Math.round((displayCompleted / totalQuestions) * 100);
         countEl.innerText = `${percent}% (${displayCompleted}/${totalQuestions})`;
@@ -448,23 +432,21 @@ function updateProgressBar() {
 }
 
 function retryQuestion(questionText) {
-    // Find the index in the *original* full question set if possible
     const fullQuestions = JSON.parse(localStorage.getItem('quizDataForRestart') || '[]');
     const originalIndex = fullQuestions.findIndex(q => q && q.question === questionText);
 
     if (originalIndex !== -1) {
-        // Set the current randomizedQuestions to just this one question for retry
         randomizedQuestions = [fullQuestions[originalIndex]];
-        questions = [...randomizedQuestions]; // Update base questions to this single one for this session
+        questions = [...randomizedQuestions];
         retryingQuestion = true;
-        retryIndex = 0; // Index within the new single-question array
+        retryIndex = 0;
         currentIndex = 0;
-        completedQuestions = 0; // Reset progress for the retry
-        totalQuestions = 1; // Only 1 question now
-        selectedAnswer = null; // Clear previous selection for this question
+        completedQuestions = 0;
+        totalQuestions = 1;
+        selectedAnswer = null;
 
         showSlide('quizPage');
-        loadQuestion(); // Load the specific question
+        loadQuestion();
     } else {
         alert("Error: Could not find the selected question details to retry.");
     }
@@ -482,7 +464,6 @@ function toggleWrongList() {
 }
 
 function redoWrongAnswers() {
-     // Use the simpler wrongAnswers list populated during the quiz for redo logic
      if (wrongAnswers.length === 0) {
          alert("No wrong or skipped answers recorded to redo!");
          return;
@@ -493,8 +474,8 @@ function redoWrongAnswers() {
          .filter(Boolean);
 
      if (questionsToRedo.length > 0) {
-         questions = [...questionsToRedo]; // Set base questions to the redo set
-         resetQuizStateForNewRound(true); // Reset and shuffle the redo set
+         questions = [...questionsToRedo];
+         resetQuizStateForNewRound(true);
          loadQuestion();
      } else {
          alert("Error finding the question details for wrong answers.");
@@ -525,9 +506,10 @@ function resetQuizStateForNewRound(doShuffle = true) {
     correctAnswers = []; wrongAnswers = []; questionTimeStats = [];
     currentQuestionStartTime = 0;
     retryingQuestion = false; retryIndex = -1;
-    timeStatsRendered = false; // Reset time stats rendered flag
+    timeStatsRendered = false;
+    currentSortColumn = null; // Reset sort state
+    currentSortDirection = 'none';
 
-    // Ensure #timeStatsContainer is hidden on reset
     const timeStatsContainer = document.getElementById('timeStatsContainer');
     if(timeStatsContainer) timeStatsContainer.classList.add('hidden');
     const toggleButton = document.getElementById('toggleTimeDetailsButton');
@@ -537,7 +519,7 @@ function resetQuizStateForNewRound(doShuffle = true) {
     if (doShuffle && questions.length > 0) {
         randomizedQuestions = shuffleArray([...questions]);
     } else {
-        randomizedQuestions = [...questions]; // Use the current 'questions' array (might be full set or redo set)
+        randomizedQuestions = [...questions];
     }
     totalQuestions = randomizedQuestions.length;
 
@@ -554,8 +536,6 @@ function goToHomePage() {
     window.location.href = 'index.html';
 }
 
-// Removed showTimeStats() function
-
 function formatDuration(ms) {
     if (typeof ms !== 'number' || ms < 0) return "N/A";
     const totalSeconds = Math.round(ms / 1000);
@@ -568,6 +548,67 @@ function formatDuration(ms) {
         return `${totalSeconds}s`;
     }
 }
+
+// --- Sorting Logic ---
+function sortTable(columnKey) {
+    let direction = 'desc'; // Default to descending for time, specific for status later
+
+    if (currentSortColumn === columnKey) {
+        // Toggle direction if clicking the same column
+        direction = currentSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        // Default direction for new column
+        if (columnKey === 'status') {
+            direction = 'asc'; // Default asc for status
+        } else {
+            direction = 'desc'; // Default desc for duration
+        }
+    }
+
+    currentSortColumn = columnKey;
+    currentSortDirection = direction;
+
+    questionTimeStats.sort((a, b) => {
+        let valA, valB;
+
+        if (columnKey === 'duration') {
+            valA = a.duration || 0;
+            valB = b.duration || 0;
+        } else if (columnKey === 'status') {
+            // Assign order value: correct=1, skipped=2, wrong=3
+            const statusOrder = { correct: 1, skipped: 2, wrong: 3 };
+            valA = statusOrder[a.status] || 4; // Default for unknown
+            valB = statusOrder[b.status] || 4;
+        } else {
+            return 0; // Should not happen
+        }
+
+        if (valA < valB) {
+            return direction === 'asc' ? -1 : 1;
+        }
+        if (valA > valB) {
+            return direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+    });
+
+    populateTimeTable(questionTimeStats); // Re-render table with sorted data
+    updateSortIndicators(); // Update visual arrows
+}
+
+function updateSortIndicators() {
+    document.querySelectorAll('.sort-indicator').forEach(ind => {
+        ind.className = 'sort-indicator'; // Reset all indicators
+    });
+
+    if (currentSortColumn) {
+        const indicator = document.getElementById(`sort-${currentSortColumn}`);
+        if (indicator) {
+            indicator.classList.add(currentSortDirection);
+        }
+    }
+}
+
 
 function populateTimeTable(statsData) {
     const tbody = document.getElementById('timeStatsTableBody');
@@ -619,13 +660,16 @@ function calculateSummaryStats(statsData) {
     avgTimeEl.textContent = formatDuration(avgDurationMs);
 }
 
+// Store histogram bin details globally for click handling
+let histogramBins = [];
+let histogramBinSize = 0;
+
 function initializeCharts(statsData) {
     const container = document.getElementById('timeStatsContainer');
     if (!container || typeof Chart === 'undefined' || !Array.isArray(statsData) || statsData.length === 0) {
-        return; // Don't try to initialize if container or Chart.js is missing
+        return;
     }
 
-    // Destroy existing charts if they exist (important for re-rendering on night mode toggle)
     ['timeBarChart', 'timeLineChart', 'timeHistogramChart'].forEach(chartId => {
         const existingChart = Chart.getChart(chartId);
         if (existingChart) {
@@ -634,7 +678,6 @@ function initializeCharts(statsData) {
     });
 
 
-     // Ensure chart containers are visible (they are within timeStatsContainer)
      document.getElementById('barChartContainer').style.display = 'flex';
      document.getElementById('lineChartContainer').style.display = 'flex';
      document.getElementById('histogramContainer').style.display = 'flex';
@@ -653,25 +696,14 @@ function initializeCharts(statsData) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-            legend: {
-                labels: { color: tickColor }
-            }
+            legend: { labels: { color: tickColor } },
+             tooltip: { enabled: true } // Enable default tooltips
         },
         scales: {
-            y: {
-                beginAtZero: true,
-                grid: { color: gridColor },
-                ticks: { color: tickColor },
-                title: { display: true, text: 'Time (seconds)', color: titleColor }
-            },
-            x: {
-                grid: { display: false },
-                ticks: { color: tickColor },
-                 title: { display: true, text: 'Question', color: titleColor }
-            }
+            y: { beginAtZero: true, grid: { color: gridColor }, ticks: { color: tickColor }, title: { display: true, text: 'Time (seconds)', color: titleColor } },
+            x: { grid: { display: false }, ticks: { color: tickColor }, title: { display: true, text: 'Question', color: titleColor } }
         }
     };
-    const histogramOptions = { ...chartOptions, scales: { ...chartOptions.scales, x: { ...chartOptions.scales.x, title: { display: true, text: 'Time Bins (seconds)', color: titleColor } }, y: { ...chartOptions.scales.y, title: { display: true, text: 'Number of Questions', color: titleColor } } } };
 
     const barCtx = document.getElementById('timeBarChart')?.getContext('2d');
     if (barCtx) {
@@ -701,7 +733,18 @@ function initializeCharts(statsData) {
                     borderWidth: 1
                 }]
             },
-            options: chartOptions
+            options: { // Add onClick specific to bar chart
+                 ...chartOptions,
+                onClick: (event, elements, chart) => {
+                    if (elements.length > 0) {
+                        const index = elements[0].index;
+                        const questionData = questionTimeStats[index];
+                        if (questionData) {
+                            alert(`Question ${index + 1}:\n"${questionData.question}"\nTime: ${formatDuration(questionData.duration)}\nStatus: ${questionData.status}`);
+                        }
+                    }
+                }
+            }
         });
     }
 
@@ -731,15 +774,48 @@ function initializeCharts(statsData) {
     const histogramCtx = document.getElementById('timeHistogramChart')?.getContext('2d');
     if (histogramCtx) {
         const maxTime = Math.max(...durationsSeconds, 10);
-        const binSize = Math.max(Math.ceil(maxTime / 10), 5);
-        const numBins = Math.ceil(maxTime / binSize);
-        const bins = Array(numBins).fill(0);
-        const binLabels = Array(numBins).fill(0).map((_, i) => `${i * binSize}-${(i + 1) * binSize}s`);
+        histogramBinSize = Math.max(Math.ceil(maxTime / 10), 5); // Store globally
+        const numBins = Math.ceil(maxTime / histogramBinSize);
+        histogramBins = Array(numBins).fill(0); // Store globally
+        const binLabels = Array(numBins).fill(0).map((_, i) => `${i * histogramBinSize}-${(i + 1) * histogramBinSize}s`);
 
         durationsSeconds.forEach(time => {
-            const binIndex = Math.min(Math.floor(time / binSize), numBins - 1);
-             if (binIndex >= 0) bins[binIndex]++;
+            const binIndex = Math.min(Math.floor(time / histogramBinSize), numBins - 1);
+             if (binIndex >= 0) histogramBins[binIndex]++;
         });
+
+         const histogramChartOptions = {
+             ...chartOptions,
+             scales: {
+                 ...chartOptions.scales,
+                 x: { ...chartOptions.scales.x, title: { display: true, text: 'Time Bins (seconds)', color: titleColor } },
+                 y: { ...chartOptions.scales.y, title: { display: true, text: 'Number of Questions', color: titleColor } }
+             },
+             onClick: (event, elements, chart) => {
+                if (elements.length > 0) {
+                    const index = elements[0].index; // Index of the bin
+                    const binMinTime = index * histogramBinSize;
+                    const binMaxTime = (index + 1) * histogramBinSize;
+
+                    const questionsInBin = questionTimeStats.filter(stat => {
+                        const timeSec = (stat.duration || 0) / 1000;
+                        return timeSec >= binMinTime && timeSec < binMaxTime;
+                    });
+
+                    let alertMessage = `Questions in time range ${binMinTime}-${binMaxTime}s (${questionsInBin.length}):\n\n`;
+                    if (questionsInBin.length > 0) {
+                        alertMessage += questionsInBin.map((q, i) => `${i + 1}. ${q.question.substring(0, 50)}... (${formatDuration(q.duration)})`).join('\n');
+                         if (questionsInBin.length > 10) { // Limit message length
+                             alertMessage += '\n... (and more)';
+                         }
+                    } else {
+                        alertMessage += "None";
+                    }
+                    alert(alertMessage);
+                }
+             }
+         };
+
 
         new Chart(histogramCtx, {
             type: 'bar',
@@ -747,19 +823,18 @@ function initializeCharts(statsData) {
                 labels: binLabels,
                 datasets: [{
                     label: '# of Questions',
-                    data: bins,
+                    data: histogramBins, // Use global var
                     backgroundColor: isNightMode ? 'rgba(186, 104, 200, 0.6)' : 'rgba(153, 102, 255, 0.6)',
                     borderColor: isNightMode ? 'rgb(186, 104, 200)' : 'rgb(153, 102, 255)',
                     borderWidth: 1
                 }]
             },
-             options: histogramOptions
+             options: histogramChartOptions
         });
      }
-     timeStatsRendered = true; // Mark stats as rendered
+     timeStatsRendered = true;
 }
 
-// New function to toggle time stats visibility
 function toggleTimeStatsDetails() {
     const container = document.getElementById('timeStatsContainer');
     const button = document.getElementById('toggleTimeDetailsButton');
@@ -768,11 +843,10 @@ function toggleTimeStatsDetails() {
     const isHidden = container.classList.contains('hidden');
 
     if (isHidden) {
-        // Populate data and render charts ONLY if they haven't been rendered yet
         if (!timeStatsRendered) {
             populateTimeTable(questionTimeStats);
             calculateSummaryStats(questionTimeStats);
-            initializeCharts(questionTimeStats); // This will set timeStatsRendered = true
+            initializeCharts(questionTimeStats);
         }
         container.classList.remove('hidden');
         button.textContent = 'Hide Time Details';

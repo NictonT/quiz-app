@@ -42,13 +42,13 @@ h2 {
     font-size: 1.5em;
 }
 
-h4 { /* Style for subheadings like in time stats */
+h4 {
     font-size: 1.1em;
     margin-top: 25px;
     margin-bottom: 10px;
     color: var(--text-color);
     font-weight: 600;
-    text-align: left; /* Align left by default */
+    text-align: left;
 }
 
 .container {
@@ -94,14 +94,16 @@ body.night-mode .slide {
 
 .header {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-between; /* This will push help button left and toggle right */
     align-items: center;
     margin-bottom: 20px;
+    gap: 15px; /* Add some gap between header items */
 }
 
 .toggle-container {
     display: flex;
     align-items: center;
+    /* Removed margin-left: auto; */
 }
 
 .toggle {
@@ -191,7 +193,7 @@ body.night-mode .button {
     flex-wrap: wrap;
     justify-content: space-around;
     gap: 10px;
-    margin-top: 30px; /* More space above bottom buttons */
+    margin-top: 30px;
 }
 
 .content {
@@ -204,7 +206,7 @@ body.night-mode .button {
 
 #questionArea {
     margin-bottom: 20px;
-    position: relative;
+    position: relative; /* Needed if help button was absolute */
 }
 
 #answersContainer {
@@ -225,7 +227,7 @@ body.night-mode .button {
     color: var(--text-color);
     box-shadow: var(--box-shadow);
     text-align: left;
-    border: 2px solid transparent; /* Placeholder for selection border */
+    border: 2px solid transparent;
 }
 
 
@@ -246,7 +248,7 @@ body.night-mode .answer:hover {
 
 .answer.selected {
     background-color: rgba(200, 200, 200, 0.9);
-    border-color: var(--primary-color); /* Use border color for selection */
+    border-color: var(--primary-color);
 }
 
 body.night-mode .answer.selected {
@@ -254,6 +256,7 @@ body.night-mode .answer.selected {
     border-color: var(--primary-color);
 }
 
+/* These styles are now only applied by showAnswer() */
 .answer.correct {
     background-color: rgba(76, 175, 80, 0.8) !important;
     color: white !important;
@@ -504,14 +507,15 @@ body.night-mode .slide::after {
     background-color: var(--primary-color);
 }
 
-
+/* Help button styling (now in header) */
 .help-button {
-    position: absolute;
-    top: -15px;
-    right: 0px;
+    /* Remove absolute positioning */
+    /* position: absolute; */
+    /* top: -15px; */
+    /* right: 0px; */
     background-color: var(--secondary-color);
     color: white;
-    padding: 6px 10px;
+    padding: 0; /* Remove padding if fixed size */
     border: none;
     border-radius: 50%;
     width: 30px;
@@ -525,6 +529,8 @@ body.night-mode .slide::after {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0; /* Prevent shrinking */
+    /* margin-right: auto; */ /* Push it left if needed, but space-between on header works */
 }
 
 
@@ -562,7 +568,6 @@ body.night-mode .file-name {
 }
 
 
-/* Divider between standard results and time stats */
 .result-divider {
     border: none;
     height: 1px;
@@ -573,20 +578,15 @@ body.night-mode .result-divider {
     background-color: #444;
 }
 
-/* Container for the "Show Time Details" button */
 .show-more-container {
-    text-align: center; /* Center the button */
-    margin-bottom: 20px; /* Space below the button */
+    text-align: center;
+    margin-bottom: 20px;
 }
 
-
-/* Styles for Time Stats section (within resultPage) */
 #timeStatsContainer {
-     margin-top: 20px; /* Add space above the time stats section */
-     /* Initially hidden via .hidden class */
+     margin-top: 20px;
 }
 
-/* Copied/adapted styles from previous time-stats.html setup */
 .indicator {
     display: inline-block;
     width: 12px;
@@ -601,7 +601,7 @@ body.night-mode .result-divider {
 .indicator.skipped { background-color: #FFC107; }
 
 
-#timeStatsContainer table { /* Target table inside the container */
+#timeStatsContainer table {
     width: 100%;
     margin-top: 0;
     border-collapse: collapse;
@@ -641,6 +641,40 @@ body.night-mode .result-divider {
      border-bottom: 2px solid #eee;
 }
 
+/* Style for sortable headers */
+.sortable-header {
+    cursor: pointer;
+    position: relative; /* For positioning the indicator */
+}
+.sortable-header:hover {
+    background-color: #f0f0f0;
+}
+body.night-mode .sortable-header:hover {
+     background-color: #404040;
+}
+
+.sort-indicator {
+    display: inline-block;
+    width: 0;
+    height: 0;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    margin-left: 8px;
+    vertical-align: middle;
+    opacity: 0.5; /* Default dim */
+}
+
+.sort-indicator.asc {
+    border-bottom: 5px solid var(--text-color);
+    opacity: 1;
+}
+
+.sort-indicator.desc {
+    border-top: 5px solid var(--text-color);
+    opacity: 1;
+}
+
+
 body.night-mode #timeStatsContainer th {
      background-color: #3a3a3a;
      color: #eee;
@@ -657,7 +691,7 @@ body.night-mode #timeStatsContainer tr:hover td {
 }
 
 
-.chart-container { /* Shared style for chart areas */
+.chart-container {
     border: 1px solid #eee;
     padding: 20px;
     margin-top: 25px;
@@ -673,7 +707,7 @@ body.night-mode #timeStatsContainer tr:hover td {
      background-color: rgba(0,0,0,0.02);
      border-radius: 8px;
 }
- .chart-container h4 { /* Titles within chart containers */
+ .chart-container h4 {
      width: 100%;
      text-align: center;
      margin: 0 0 15px 0;
@@ -687,6 +721,7 @@ body.night-mode #timeStatsContainer tr:hover td {
     max-width: 100%;
     height: auto;
     max-height: 350px;
+    cursor: pointer; /* Indicate clickable charts */
  }
   .chart-container p {
       font-style: italic;
@@ -704,7 +739,7 @@ body.night-mode .chart-container h4 {
      border-bottom-color: #444;
  }
 
- .time-summary { /* Style for the summary stats block */
+ .time-summary {
     display: flex;
     justify-content: space-around;
     padding: 15px 0;
@@ -740,7 +775,7 @@ body.night-mode .chart-container h4 {
   }
 
 
-  .table-container { /* Container for the time breakdown table */
+  .table-container {
       max-height: 400px;
       overflow-y: auto;
       border: 1px solid #eee;
@@ -762,6 +797,9 @@ body.night-mode .chart-container h4 {
         max-width: 95%;
         width: 95%;
         padding: 20px;
+    }
+    .header {
+        gap: 10px; /* Less gap */
     }
     h2 {
         font-size: 1.3em;
@@ -812,12 +850,19 @@ body.night-mode .chart-container h4 {
          box-sizing: border-box;
      }
       .header {
-         flex-direction: column;
+         /* Keep flex-row but allow wrapping if needed */
+         /* flex-direction: column; */
          gap: 10px;
-         align-items: flex-start;
+         align-items: center; /* Center items vertically */
+      }
+      /* Help button might need slight adjustment */
+      .help-button {
+          width: 28px;
+          height: 28px;
+          font-size: 14px;
       }
       .toggle-container {
-          align-self: flex-end;
+         /* Let space-between handle positioning */
       }
       .progress-container {
          flex-direction: column;
@@ -832,7 +877,7 @@ body.night-mode .chart-container h4 {
           text-align: center;
       }
       .score-graphics {
-          margin: 15px 0; /* Less margin */
+          margin: 15px 0;
       }
       .circle-chart {
           width: 80px;

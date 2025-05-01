@@ -11,6 +11,8 @@
 <body>
     <div id="quizPage" class="slide active">
         <div class="header">
+             <!-- Help button moved here -->
+             <button class="button secondary help-button" onclick="showAnswer()">?</button>
             <div class="toggle-container">
                 <input type="checkbox" id="nightModeToggleQuiz" class="toggle" />
                 <label for="nightModeToggleQuiz" class="toggle-label">Night Mode</label>
@@ -33,7 +35,7 @@
         <div class="button-container">
             <button class="button primary" id="submitButton" onclick="submitAnswer()">Submit</button>
             <button class="button secondary" id="skipButton" onclick="skipQuestion()">Skip</button>
-            <button class="button secondary help-button" onclick="showAnswer()">?</button>
+            <!-- Removed Help button from here -->
         </div>
     </div>
 
@@ -62,13 +64,11 @@
 
             <hr class="result-divider">
 
-            <!-- Button to toggle time details -->
             <div class="show-more-container">
                  <button class="button secondary" id="toggleTimeDetailsButton" onclick="toggleTimeStatsDetails()">Show Time Details</button>
             </div>
 
 
-            <!-- Container for Time Statistics (Initially Hidden) -->
             <div id="timeStatsContainer" class="hidden">
                 <div class="time-summary">
                     <div>
@@ -87,8 +87,9 @@
                        <thead>
                            <tr>
                                <th>Question</th>
-                               <th>Time Spent</th>
-                               <th>Status</th>
+                               <!-- Added onclick for sorting -->
+                               <th onclick="sortTable('duration')" class="sortable-header">Time Spent <span class="sort-indicator" id="sort-duration"></span></th>
+                               <th onclick="sortTable('status')" class="sortable-header">Status <span class="sort-indicator" id="sort-status"></span></th>
                            </tr>
                        </thead>
                        <tbody id="timeStatsTableBody">
@@ -101,6 +102,7 @@
 
                <div id="barChartContainer" class="chart-container">
                    <h4>Bar Chart - Time per Question</h4>
+                   <!-- Ensure canvas has explicit ID -->
                    <canvas id="timeBarChart"></canvas>
                </div>
 
@@ -111,6 +113,7 @@
 
                <div id="histogramContainer" class="chart-container">
                     <h4>Histogram - Question Time Distribution</h4>
+                     <!-- Ensure canvas has explicit ID -->
                     <canvas id="timeHistogramChart"></canvas>
                </div>
 
@@ -126,7 +129,6 @@
                      <p>(Requires section data)</p>
                </div>
             </div>
-            <!-- End Time Statistics Container -->
 
         </div>
         <div class="button-container">

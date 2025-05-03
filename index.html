@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Application</title>
-    <!-- Assuming you have styles.css for this page -->
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
@@ -13,7 +12,6 @@
         <div class="header">
             <h1>Quiz Application</h1>
             <div class="toggle-container">
-                <!-- Make sure toggle ID is unique if sharing CSS/JS logic across pages -->
                 <input type="checkbox" id="nightModeToggleMain" class="toggle" />
                 <label for="nightModeToggleMain" class="toggle-label">Night Mode</label>
             </div>
@@ -32,14 +30,11 @@
     "correctAnswer": "C"
   }
 ]
-// Enter a single question object or an array like above.
             '></textarea>
             <button class="button primary" id="executeButton" onclick="executeQuizFromInput()">Execute</button>
             <button class="button secondary" onclick="goToFilesPage()">Files</button>
         </div>
     </div>
-
-    <!-- Link to the correct JavaScript file for this page -->
     <script src="script.js"></script>
 </body>
 </html>

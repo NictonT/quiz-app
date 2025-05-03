@@ -77,8 +77,6 @@ function updateNightMode() {
 
     if (currentToggle) {
         currentToggle.checked = nightModeActive;
-        currentToggle.replaceWith(currentToggle.cloneNode(true));
-        currentToggle = document.getElementById(currentToggle.id);
         currentToggle.addEventListener('change', function () {
             const isEnabled = this.checked;
             document.body.classList.toggle('night-mode', isEnabled);

@@ -71,29 +71,36 @@ document.addEventListener('DOMContentLoaded', () => {
 function updateNightMode() {
     const nightModeToggleQuiz = document.getElementById('nightModeToggleQuiz');
     const nightModeToggleResult = document.getElementById('nightModeToggleResult');
-    let currentToggle = nightModeToggleQuiz || nightModeToggleResult;
+    const currentToggle = nightModeToggleQuiz || nightModeToggleResult;
     const nightModeActive = localStorage.getItem('nightMode') === 'true';
-    document.body.classList.toggle('night-mode', nightModeActive);
+    const body = document.body;
+
+    body.classList.toggle('night-mode', nightModeActive);
 
     if (currentToggle) {
         currentToggle.checked = nightModeActive;
+
         currentToggle.addEventListener('change', function () {
             const isEnabled = this.checked;
-            document.body.classList.toggle('night-mode', isEnabled);
+            body.classList.toggle('night-mode', isEnabled);
             localStorage.setItem('nightMode', String(isEnabled));
 
-             const otherToggleId = currentToggle.id === 'nightModeToggleQuiz' ? 'nightModeToggleResult' : 'nightModeToggleQuiz';
-             const otherToggle = document.getElementById(otherToggleId);
-             if (otherToggle) {
-                 otherToggle.checked = isEnabled;
-             }
-             if (!document.getElementById('timeStatsContainer')?.classList.contains('hidden') && timeStatsRendered) {
+            const otherToggleId = this.id === 'nightModeToggleQuiz' ? 'nightModeToggleResult' : 'nightModeToggleQuiz';
+            const otherToggle = document.getElementById(otherToggleId);
+            if (otherToggle) {
+                otherToggle.checked = isEnabled;
+            }
+
+            const timeStatsContainer = document.getElementById('timeStatsContainer');
+            if (timeStatsContainer && !timeStatsContainer.classList.contains('hidden') &&
+                typeof timeStatsRendered !== 'undefined' && timeStatsRendered &&
+                typeof initializeCharts === 'function' && typeof questionTimeStats !== 'undefined')
+            {
                 initializeCharts(questionTimeStats);
-             }
+            }
         });
     }
 }
-
 
 function showSlide(slideId) {
     const slides = document.querySelectorAll('.slide');

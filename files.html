@@ -117,18 +117,67 @@
     <script src="files.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-             window.fileManager = new FileManager();
+            // Helper function to generate unique IDs (copied from FileManager for this setup)
+            function generateUniqueIdLocal() {
+                return '_' + Math.random().toString(36).substr(2, 9);
+            }
 
-             const nightModeToggleEdit = document.getElementById('nightModeToggleEdit');
-             if (nightModeToggleEdit) {
-                  nightModeToggleEdit.addEventListener('change', () => {
-                      fileManager.toggleNightMode(nightModeToggleEdit.checked);
-                  });
-                  const filesToggle = document.getElementById('nightModeToggleFiles');
-                  if (filesToggle) {
-                       nightModeToggleEdit.checked = filesToggle.checked;
-                  }
-             }
+            // --- START: Ensure "quiz-app/3 D-E-F-G" file exists ---
+            try {
+                let filesFromStorage = JSON.parse(localStorage.getItem('files')) || [];
+
+                let quizAppFolder = filesFromStorage.find(item => item.name === 'quiz-app' && item.type === 'Folder');
+
+                if (!quizAppFolder) {
+                    quizAppFolder = {
+                        id: generateUniqueIdLocal(),
+                        name: 'quiz-app',
+                        type: 'Folder',
+                        content: []
+                    };
+                    filesFromStorage.push(quizAppFolder);
+                }
+
+                // Ensure quizAppFolder.content is an array
+                if (!Array.isArray(quizAppFolder.content)) {
+                    quizAppFolder.content = [];
+                }
+
+                let targetFile = quizAppFolder.content.find(item => item.name === '3 D-E-F-G' && item.type === 'JSON');
+
+                if (!targetFile) {
+                    targetFile = {
+                        id: generateUniqueIdLocal(),
+                        name: '3 D-E-F-G',
+                        type: 'JSON',
+                        content: JSON.stringify({
+                            question: "Sample Question for 3 D-E-F-G",
+                            answers: { "A": "Option 1", "B": "Option 2", "C": "Option 3" },
+                            correctAnswer: "A"
+                        }, null, 2) // Default valid quiz content
+                    };
+                    quizAppFolder.content.push(targetFile);
+                }
+                localStorage.setItem('files', JSON.stringify(filesFromStorage));
+            } catch (e) {
+                console.error("Error initializing default file structure:", e);
+                // Optionally clear localStorage if it's corrupted, or notify user
+                // localStorage.removeItem('files'); // Drastic, use with caution
+            }
+            // --- END: Ensure "quiz-app/3 D-E-F-G" file exists ---
+
+            window.fileManager = new FileManager();
+
+            const nightModeToggleEdit = document.getElementById('nightModeToggleEdit');
+            if (nightModeToggleEdit) {
+                 nightModeToggleEdit.addEventListener('change', () => {
+                     fileManager.toggleNightMode(nightModeToggleEdit.checked);
+                 });
+                 const filesToggle = document.getElementById('nightModeToggleFiles');
+                 if (filesToggle) {
+                      nightModeToggleEdit.checked = filesToggle.checked;
+                 }
+            }
 
             if (typeof window.clearLocalStorage === 'undefined') {
                 window.clearLocalStorage = function() {

@@ -5,10 +5,10 @@ class FileManager {
         this.fileNameInput = document.getElementById('fileNameInput');
         this.fileType = document.getElementById('fileType');
         this.newFileNameInput = document.getElementById('newFileNameInput');
-        this.addFileModal = document.getElementById('addFileModal'); // Make sure this ID exists in files.html
+        this.addFileModal = document.getElementById('addFileModal');
         this.renameFileModal = document.getElementById('renameFileModal');
-        this.executionModal = document.getElementById('executionModal'); // Keep refs even if unused for quiz
-        this.executionFrame = document.getElementById('executionFrame'); // Keep refs
+        this.executionModal = document.getElementById('executionModal'); 
+        this.executionFrame = document.getElementById('executionFrame'); 
         this.filesPage = document.getElementById('filesPage');
         this.editPage = document.getElementById('editPage');
         this.currentEditFileName = document.getElementById('currentEditFileName');
@@ -19,22 +19,29 @@ class FileManager {
         this.codeEditorView = document.getElementById('codeEditorView');
         this.visualEditorView = document.getElementById('visualEditorView');
         this.visualEditorContainer = document.getElementById('visualEditorContainer');
-        this.pageTitle = document.getElementById('pageTitle'); // Cache page title
+        this.pageTitle = document.getElementById('pageTitle'); 
 
         // State variables
         this.files = JSON.parse(localStorage.getItem('files')) || [];
-        this.currentFolderPath = []; // Array of folder IDs
+        this.currentFolderPath = []; 
         this.ascending = true;
-        this.currentFileId = null; // ID of file being edited/renamed
+        this.currentFileId = null;
         this.currentEditorView = 'code';
-        this.visualEditorData = null; // Holds parsed data for visual editor (always an array)
+        this.visualEditorData = null;
+
+        if (this.files.length === 1 &&
+            this.files[0].name === '3 D-E-F-G' &&
+            this.files[0].type === 'Folder' &&
+            this.files[0].id) {
+            this.currentFolderPath = [this.files[0].id];
+            console.log('Starting inside folder:', this.files[0].name, 'with ID:', this.files[0].id);
+        }
 
         // Initialization
         this.initNightMode();
         this.displayFiles();
-        console.log("FileManager initialized."); // Log successful initialization
+        console.log("FileManager initialized."); 
     }
-
     // --- Core File System Logic ---
     generateUniqueId() {
         return '_' + Math.random().toString(36).substr(2, 9);

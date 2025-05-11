@@ -122,12 +122,12 @@
                 return '_' + Math.random().toString(36).substr(2, 9);
             }
 
-            // --- START: Ensure "quiz-app/3 D-E-F-G" file exists ---
+            // --- START: Ensure "quiz-app/3 D-E-F-G/" folder structure with .txt (as JSON) files exists ---
             try {
                 let filesFromStorage = JSON.parse(localStorage.getItem('files')) || [];
 
+                // 1. Ensure "quiz-app" folder exists
                 let quizAppFolder = filesFromStorage.find(item => item.name === 'quiz-app' && item.type === 'Folder');
-
                 if (!quizAppFolder) {
                     quizAppFolder = {
                         id: generateUniqueIdLocal(),
@@ -137,34 +137,77 @@
                     };
                     filesFromStorage.push(quizAppFolder);
                 }
-
-                // Ensure quizAppFolder.content is an array
+                // Ensure its content is an array
                 if (!Array.isArray(quizAppFolder.content)) {
                     quizAppFolder.content = [];
                 }
 
-                let targetFile = quizAppFolder.content.find(item => item.name === '3 D-E-F-G' && item.type === 'JSON');
-
-                if (!targetFile) {
-                    targetFile = {
+                // 2. Ensure "3 D-E-F-G" folder exists inside "quiz-app"
+                let threeDEFGFolder = quizAppFolder.content.find(item => item.name === '3 D-E-F-G' && item.type === 'Folder');
+                if (!threeDEFGFolder) {
+                    threeDEFGFolder = {
                         id: generateUniqueIdLocal(),
                         name: '3 D-E-F-G',
-                        type: 'JSON',
-                        content: JSON.stringify({
-                            question: "Sample Question for 3 D-E-F-G",
-                            answers: { "A": "Option 1", "B": "Option 2", "C": "Option 3" },
-                            correctAnswer: "A"
-                        }, null, 2) // Default valid quiz content
+                        type: 'Folder',
+                        content: []
                     };
-                    quizAppFolder.content.push(targetFile);
+                    quizAppFolder.content.push(threeDEFGFolder);
                 }
+                // Ensure its content is an array
+                if (!Array.isArray(threeDEFGFolder.content)) {
+                    threeDEFGFolder.content = [];
+                }
+
+                // 3. Define sample ".txt" files to be treated as JSON (quiz data)
+                const sampleTxtFilesData = [
+                    {
+                        name: 'introduction_quiz.txt',
+                        quizContent: {
+                            question: "What is the primary color of the sky on a clear day?",
+                            answers: { "A": "Blue", "B": "Green", "C": "Red" },
+                            correctAnswer: "A"
+                        }
+                    },
+                    {
+                        name: 'basic_math.txt',
+                        quizContent: {
+                            question: "What is 2 + 2?",
+                            answers: { "A": "3", "B": "4", "C": "5", "D": "22" },
+                            correctAnswer: "B"
+                        }
+                    },
+                    {
+                        name: 'chapter_one_summary.txt',
+                        quizContent: {
+                            question: "What was the main topic of Chapter One?",
+                            answers: { "A": "Beginnings", "B": "Endings", "C": "Middles" },
+                            correctAnswer: "A"
+                        }
+                    }
+                ];
+
+                // Add/update these sample files in the "3 D-E-F-G" folder
+                sampleTxtFilesData.forEach(sampleFile => {
+                    let existingFile = threeDEFGFolder.content.find(item => item.name === sampleFile.name && item.type === 'JSON');
+                    if (!existingFile) {
+                        threeDEFGFolder.content.push({
+                            id: generateUniqueIdLocal(),
+                            name: sampleFile.name, // e.g., "introduction_quiz.txt"
+                            type: 'JSON',          // Crucial: Treat as JSON
+                            content: JSON.stringify(sampleFile.quizContent, null, 2)
+                        });
+                    } else {
+                        // Optional: Update content if file exists, or leave as is
+                        // existingFile.content = JSON.stringify(sampleFile.quizContent, null, 2);
+                    }
+                });
+
                 localStorage.setItem('files', JSON.stringify(filesFromStorage));
+                console.log("Default file structure ensured:", JSON.parse(JSON.stringify(filesFromStorage)));
             } catch (e) {
                 console.error("Error initializing default file structure:", e);
-                // Optionally clear localStorage if it's corrupted, or notify user
-                // localStorage.removeItem('files'); // Drastic, use with caution
             }
-            // --- END: Ensure "quiz-app/3 D-E-F-G" file exists ---
+            // --- END: Ensure "quiz-app/3 D-E-F-G/" folder structure ---
 
             window.fileManager = new FileManager();
 
@@ -184,7 +227,6 @@
                     if (confirm('Are you sure you want to clear all files? This cannot be undone.')) {
                         localStorage.removeItem('files');
                         localStorage.removeItem('nightMode');
-                        // Clear quiz data too if needed
                         localStorage.removeItem('quizDataToExecute');
                         window.location.reload();
                     }

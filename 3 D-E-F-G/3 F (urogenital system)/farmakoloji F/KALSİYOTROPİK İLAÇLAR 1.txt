@@ -1,0 +1,68 @@
+[
+  {
+    "question": "Alendronat adlı ilacın yaygın bir yan etkisi nedir?",
+    "answers": {
+      "A": "Gastrit",
+      "B": "Duodenit",
+      "C": "Özofajit",
+      "D": "Stomatit",
+      "E": "Enterit"
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "question": "Paratiroid Hormonunun (PTH) gastrointestinal sistemde (GİS) Kalsiyum (Ca) ve Fosfat (PO₄) emilimi üzerindeki etkisi aşağıdakilerden hangisidir?",
+    "answers": {
+      "A": "Ca emilimini artırırken, PO₄ emilimini azaltır.",
+      "B": "Hem Ca hem de PO₄ emilimini azaltır.",
+      "C": "Ca emilimini azaltırken, PO₄ emilimini artırır.",
+      "D": "Hem Ca hem de PO₄ emilimini artırır.",
+      "E": "Sadece Ca emilimini artırır, PO₄ emilimi üzerinde etkisi yoktur."
+    },
+    "correctAnswer": "D"
+  },
+  {
+    "question": "Paratiroid Hormonunun (PTH) böbreklerde Kalsiyum (Ca) ve Fosfat (PO₄) itrahı (atılımı) üzerindeki etkileri nasıldır?",
+    "answers": {
+      "A": "Ca itrahını artırır, PO₄ itrahını azaltır.",
+      "B": "Hem Ca hem de PO₄ itrahını artırır.",
+      "C": "Ca itrahını azaltır, PO₄ itrahını azaltır.",
+      "D": "Ca itrahını azaltır, PO₄ itrahını artırır.",
+      "E": "Sadece PO₄ itrahını artırır, Ca itrahı üzerinde etkisi yoktur."
+    },
+    "correctAnswer": "D"
+  },
+  {
+    "question": "Paratiroid Hormonunun (PTH) kemik dokusu üzerindeki etkisi, metne göre Kalsiyum (Ca) ve Fosfat (PO₄) salınımı/absorbsiyonu açısından nasıldır?",
+    "answers": {
+      "A": "Kemikten Ca salınımını artırır, PO₄ salınımını ise azaltır.",
+      "B": "Kemikten hem Ca hem de PO₄ salınımını/absorbsiyonunu azaltır.",
+      "C": "Kemikten Ca salınımını azaltır, PO₄ salınımını ise artırır.",
+      "D": "Kemikten hem Ca hem de PO₄ salınımını/absorbsiyonunu artırır.",
+      "E": "Kemikte Ca ve PO₄ depolanmasını artırır."
+    },
+    "correctAnswer": "D"
+  },
+  {
+    "question": "Paratiroid Hormonunun (PTH) etkileriyle ilgili aşağıdaki ifadelerden hangileri metne göre doğrudur?\nI. PTH, net olarak kandaki Kalsiyum (Ca) düzeyini artırır.\nII. PTH, net olarak kandaki Fosfat (PO₄) düzeyini azaltır.\nIII. PTH, böbreklerden Fosfat (PO₄) itrahını azaltır.",
+    "answers": {
+      "A": "Yalnız I",
+      "B": "Yalnız III",
+      "C": "I ve II",
+      "D": "II ve III",
+      "E": "I, II ve III"
+    },
+    "correctAnswer": "C"
+  },
+  {
+    "question": "Hipokalsemi tedavisinde ne kullanılır?",
+    "answers": {
+      "A": "Kalsiyum glukonat",
+      "B": "Kolekalsiferol",
+      "C": "Kalsitriol",
+      "D": "Kalsiyum karbonat",
+      "E": "Alfakalsidol"
+    },
+    "correctAnswer": "C"
+  }
+]

@@ -115,7 +115,7 @@
     </div>
 
     <script src="files.js"></script>
-        <script>
+          <script>
         document.addEventListener('DOMContentLoaded', () => {
             function generateUniqueIdLocal() {
                 return '_' + Math.random().toString(36).substr(2, 9);
@@ -129,6 +129,7 @@
                 }, null, 2);
             }
 
+            // Helper to find or create an item (file or folder) in a given parent array
             function findOrCreateItem(parentContentArray, itemName, itemType, defaultFileContentGenerator) {
                 let item = parentContentArray.find(it => it.name === itemName && it.type === itemType);
                 if (!item) {
@@ -140,73 +141,51 @@
                     };
                     parentContentArray.push(item);
                 }
+                // Ensure folder content is an array, even if it was found
                 if (itemType === 'Folder' && !Array.isArray(item.content)) {
                     item.content = [];
                 }
                 return item;
             }
 
-            // --- START: Ensure "3 D-E-F-G" is the root view with its nested structure ---
+            // --- START: Ensure "3 D-E-F-G" folder with nested structure exists at the root level ---
             try {
-                let rootFilesArrayFromStorage = JSON.parse(localStorage.getItem('files')) || [];
-                let threeDEFG_RootFolder;
+                // Load all files/folders currently at the root level
+                let rootFilesArray = JSON.parse(localStorage.getItem('files')) || [];
 
-                // Attempt to find an existing "3 D-E-F-G" folder at the root.
-                // This is slightly more robust than assuming it's always the *only* item or always at index 0.
-                threeDEFG_RootFolder = rootFilesArrayFromStorage.find(item => item.name === '3 D-E-F-G' && item.type === 'Folder');
+                // 1. Find or create the "3 D-E-F-G" folder AT THE ROOT LEVEL
+                //    It will be added to `rootFilesArray` if it doesn't exist.
+                const threeDEFG_TopLevelFolder = findOrCreateItem(rootFilesArray, '3 D-E-F-G', 'Folder');
 
-                if (!threeDEFG_RootFolder) {
-                    // If not found, create it and make it the *only* top-level item.
-                    // This effectively resets the root to only contain "3 D-E-F-G" if it wasn't found.
-                    threeDEFG_RootFolder = {
-                        id: generateUniqueIdLocal(),
-                        name: '3 D-E-F-G',
-                        type: 'Folder',
-                        content: [] // Content will be populated next
-                    };
-                    rootFilesArrayFromStorage = [threeDEFG_RootFolder]; // Set files array to only contain this new folder
-                } else {
-                    // If found, ensure the rootFilesArray only contains this folder if you want a strict "only 3 D-E-F-G at root" policy
-                    // For a less strict policy (allow other root items but still focus on 3 D-E-F-G), you wouldn't reassign rootFilesArrayFromStorage here.
-                    // For this request, we'll assume we want it to be the primary/only root for the auto-navigation to work as intended.
-                    if (rootFilesArrayFromStorage.length > 1) {
-                         // If other items exist at root, filter to keep only our target "3 D-E-F-G" if desired
-                         // rootFilesArrayFromStorage = rootFilesArrayFromStorage.filter(item => item.id === threeDEFG_RootFolder.id);
-                         // For simplicity with the FileManager constructor change, ensuring it's the *only* item is easiest.
-                         // So if found but others exist, we could also just re-assign:
-                         rootFilesArrayFromStorage = [threeDEFG_RootFolder];
-                    }
-                }
-                
-                // Ensure its content array exists
-                if (!Array.isArray(threeDEFG_RootFolder.content)) {
-                    threeDEFG_RootFolder.content = [];
-                }
+                // 2. Now populate the *content* of this `threeDEFG_TopLevelFolder`
+                //    (Its `content` array was ensured to exist by findOrCreateItem)
 
-                // Now, populate the *content* of threeDEFG_RootFolder
-                const studyMaterialFolder = findOrCreateItem(threeDEFG_RootFolder.content, 'Study Material', 'Folder');
+                //    a. "Study Material" folder inside "3 D-E-F-G"
+                const studyMaterialFolder = findOrCreateItem(threeDEFG_TopLevelFolder.content, 'Study Material', 'Folder');
                 findOrCreateItem(studyMaterialFolder.content, 'Chapter1_Notes.txt', 'JSON', createDefaultQuizContent);
                 findOrCreateItem(studyMaterialFolder.content, 'Key_Definitions.txt', 'JSON', createDefaultQuizContent);
 
-                const practiceSetsFolder = findOrCreateItem(threeDEFG_RootFolder.content, 'Practice Sets', 'Folder');
+                //    b. "Practice Sets" folder inside "3 D-E-F-G"
+                const practiceSetsFolder = findOrCreateItem(threeDEFG_TopLevelFolder.content, 'Practice Sets', 'Folder');
                 findOrCreateItem(practiceSetsFolder.content, 'Set_Alpha.txt', 'JSON', createDefaultQuizContent);
                 
+                //    c. "Old Exams" folder inside "Practice Sets" (which is inside "3 D-E-F-G")
                 const oldExamsFolder = findOrCreateItem(practiceSetsFolder.content, 'Old Exams', 'Folder');
                 findOrCreateItem(oldExamsFolder.content, 'Midterm_2023.txt', 'JSON', createDefaultQuizContent);
 
-                findOrCreateItem(threeDEFG_RootFolder.content, 'Misc_Quiz.txt', 'JSON', createDefaultQuizContent);
+                //    d. "Misc_Quiz.txt" file directly inside "3 D-E-F-G"
+                findOrCreateItem(threeDEFG_TopLevelFolder.content, 'Misc_Quiz.txt', 'JSON', createDefaultQuizContent);
 
-                localStorage.setItem('files', JSON.stringify(rootFilesArrayFromStorage));
-                console.log("Default file structure (rooted at 3 D-E-F-G) ensured:", JSON.parse(JSON.stringify(rootFilesArrayFromStorage)));
+                // Save the potentially modified rootFilesArray back to localStorage
+                localStorage.setItem('files', JSON.stringify(rootFilesArray));
+                console.log("Default file structure including '3 D-E-F-G' ensured:", JSON.parse(JSON.stringify(rootFilesArray)));
 
             } catch (e) {
                 console.error("Error initializing default file structure:", e);
             }
-            // --- END: Ensure "3 D-E-F-G" is the root view ---
+            // --- END: Ensure "3 D-E-F-G" folder with nested structure ---
 
-            // FileManager constructor (in files.js) should be modified as described in the previous answer
-            // to check if this.files[0] is "3 D-E-F-G" and set currentFolderPath accordingly.
-            window.fileManager = new FileManager(); 
+            window.fileManager = new FileManager(); // FileManager uses its original constructor
 
             const nightModeToggleEdit = document.getElementById('nightModeToggleEdit');
             if (nightModeToggleEdit) {

@@ -5,10 +5,10 @@ class FileManager {
         this.fileNameInput = document.getElementById('fileNameInput');
         this.fileType = document.getElementById('fileType');
         this.newFileNameInput = document.getElementById('newFileNameInput');
-        this.addFileModal = document.getElementById('addFileModal');
+        this.addFileModal = document.getElementById('addFileModal'); // Make sure this ID exists in files.html
         this.renameFileModal = document.getElementById('renameFileModal');
-        this.executionModal = document.getElementById('executionModal'); 
-        this.executionFrame = document.getElementById('executionFrame'); 
+        this.executionModal = document.getElementById('executionModal'); // Keep refs even if unused for quiz
+        this.executionFrame = document.getElementById('executionFrame'); // Keep refs
         this.filesPage = document.getElementById('filesPage');
         this.editPage = document.getElementById('editPage');
         this.currentEditFileName = document.getElementById('currentEditFileName');
@@ -19,28 +19,32 @@ class FileManager {
         this.codeEditorView = document.getElementById('codeEditorView');
         this.visualEditorView = document.getElementById('visualEditorView');
         this.visualEditorContainer = document.getElementById('visualEditorContainer');
-        this.pageTitle = document.getElementById('pageTitle'); 
+        this.pageTitle = document.getElementById('pageTitle'); // Cache page title
 
         // State variables
         this.files = JSON.parse(localStorage.getItem('files')) || [];
         this.currentFolderPath = []; 
         this.ascending = true;
-        this.currentFileId = null;
+        this.currentFileId = null; 
         this.currentEditorView = 'code';
         this.visualEditorData = null;
-
-        if (this.files.length === 1 &&
-            this.files[0].name === '3 D-E-F-G' &&
-            this.files[0].type === 'Folder' &&
-            this.files[0].id) {
-            this.currentFolderPath = [this.files[0].id];
-            console.log('Starting inside folder:', this.files[0].name, 'with ID:', this.files[0].id);
-        }
-
-        // Initialization
         this.initNightMode();
-        this.displayFiles();
+        this.displayFiles(); 
         console.log("FileManager initialized."); 
+    }
+    goBack() {
+        if (this.editPage && this.editPage.classList.contains('active')) {
+            this.closeEditFileModal();
+        } else if (this.currentFolderPath.length > 0) {
+            this.currentFolderPath.pop();
+            this.displayFiles();
+        } else {
+             if (this.filesPage && this.filesPage.classList.contains('active')) {
+                window.location.href = 'index.html'; // Or whatever your main page is
+             } else {
+                 this.closeEditFileModal();
+             }
+        }
     }
     // --- Core File System Logic ---
     generateUniqueId() {
